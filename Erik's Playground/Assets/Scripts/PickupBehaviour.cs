@@ -56,7 +56,7 @@ public class PickupBehaviour : MonoBehaviour
 
     private void OnTriggerExit2D(Collider2D collision)
     {
-        if (collision.gameObject.CompareTag("Player"))           // checks if it's the player colliding with the pickup
+        if (collision.gameObject.CompareTag("Player"))           // checks if it's the player that's no longer colliding with the pickup
         {
             interactionPrompt.HidePrompt();
         }

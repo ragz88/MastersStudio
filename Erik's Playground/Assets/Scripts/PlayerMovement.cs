@@ -53,11 +53,12 @@ public class PlayerMovement : MonoBehaviour
         if (Mathf.Abs(/*rb.velocity.x*/ movement) >= deadSpeed * movementSpeed)
         {
             animator.SetBool("walking", true);
-            if (rb.velocity.x > 0)
+
+            if (rb.velocity.x > 0)       // character walking right
             {
                 sprite.flipX = false;
             }
-            else if (rb.velocity.x < 0)
+            else if (rb.velocity.x < 0)  // character walking left 
             {
                 sprite.flipX = true;
             }
@@ -86,26 +87,26 @@ public class PlayerMovement : MonoBehaviour
                     - new Vector2(0, charCollider.bounds.extents.y)), -Vector2.up * rayLength, Color.yellow);
             }
 
-            if (rayHit.collider != null)
+            if (rayHit.collider != null)    // raycast hit something below the player
             {
 
-                if (rayHit.collider.gameObject.CompareTag("Ground"))
+                if (rayHit.collider.gameObject.CompareTag("Ground"))   // hit object is classified as ground
                 {
                     grounded = true;
                     animator.SetBool("jumping", false);
                     animator.SetBool("falling", false);
                     break;
                 }
-                else
+                else       // i.e. there's something other than ground below the player
                 {
                     grounded = false;
-                    if (rb.velocity.y > 0)
+                    if (rb.velocity.y > 0)          // player moving upwards (checked for animation purposes)
                     {
                         animator.SetBool("jumping", true);
                         animator.SetBool("falling", false);
                         animator.SetBool("jumpCharging", false);
                     }
-                    else if (rb.velocity.y <= 0)
+                    else if (rb.velocity.y <= 0)   // player moving downwards - they've begun falling (checked for animation purposes)
                     {
                         animator.SetBool("jumping", false);
                         animator.SetBool("falling", true);
@@ -113,16 +114,16 @@ public class PlayerMovement : MonoBehaviour
                     }
                 }
             }
-            else
+            else     // i.e. there's nothing directly below the player
             {
                 grounded = false;
-                if (rb.velocity.y > 0)
+                if (rb.velocity.y > 0)          // player moving upwards
                 {
                     animator.SetBool("jumping", true);
                     animator.SetBool("falling", false);
                     animator.SetBool("jumpCharging", false);
                 }
-                else if (rb.velocity.y <= 0)
+                else if (rb.velocity.y <= 0)    // player moving downwards - they've begun falling
                 {
                     animator.SetBool("jumping", false);
                     animator.SetBool("falling", true);
@@ -131,7 +132,7 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
-
+        // causes upward velocity when jump button pressed
         if (Input.GetButtonDown("Jump") && grounded /* && !lockMovement*/)
         {
             rb.velocity = new Vector2(rb.velocity.x, jumpSpeed);

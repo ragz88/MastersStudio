@@ -29,7 +29,7 @@ public class InteractionPrompt : MonoBehaviour
 
     private void Update()
     {
-        if (showPrompt)
+        if (showPrompt)       // shown when player is near the pickup
         {
             if (lerping)
             {
@@ -54,7 +54,7 @@ public class InteractionPrompt : MonoBehaviour
                 }
             }
         }
-        else
+        else    // player not near the pickup - thus the prompt can be hidden
         {
             if (lerping)
             {
@@ -87,20 +87,31 @@ public class InteractionPrompt : MonoBehaviour
         }
     }
 
-    // set's up bools correctly to cause the prompt to appear
+    ///<summary>
+    /// Cause the Pickup's prompt - on how to interact with the item - to show itself
+    ///</summary>
+    // Sets up bools correctly to cause the prompt to appear
     public void ShowPrompt()
     {
         lerping = true;
         showPrompt = true;
     }
 
-    // set's up bools correctly to cause the prompt to disappear
+
+    ///<summary>
+    /// Cause the Pickup's prompt - on how to interact with the item - to hide itself
+    ///</summary>
+    // Sets up bools correctly to cause the prompt to disappear
     public void HidePrompt()
     {
         lerping = true;
         showPrompt = false;
     }
 
+
+    ///<summary>
+    /// Makes prompt neatly fade away after pickup is picked up
+    ///</summary>
     // Destroys pickup object
     // also destroys the prompt after it neatly fades away.
     public void ObjectPickedUp()
