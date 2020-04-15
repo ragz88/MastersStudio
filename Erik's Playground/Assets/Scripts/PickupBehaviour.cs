@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class PickupBehaviour : MonoBehaviour
 {
+    public Ability ability;                      // this is a reference to the ability and it's visual characteristics to
+                                                 // represent it in the inventory menu
 
     public float rotationSpeed = 4;              // how fast the pickup spins
     public float hoverSpeed = 1;                 // how fast the pickup bobs up and down
@@ -39,6 +41,7 @@ public class PickupBehaviour : MonoBehaviour
             {
                 // Instantiate particles can be added here
                 interactionPrompt.ObjectPickedUp();
+                InventoryManager.inventoryInstance.StoreAbility(ability);
                 Destroy(gameObject);
             }
         }

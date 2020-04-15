@@ -14,7 +14,10 @@ public class MenuManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        // These menus must be set active for a moment to assure that important Awake() functions within them run
+        //InventoryMenu.SetActive(true);    // temporarily activates the inventory UI elements
+        //InventoryMenu.SetActive(false);   // deactivates the inventory UI elements again
+        // add the pause menu here too
     }
 
     // Update is called once per frame
