@@ -15,7 +15,6 @@ public class Ability : ScriptableObject
         Melee,
         Ranged,
         Defense,
-        Synergised
     }
 
     /// <summary>
@@ -26,7 +25,8 @@ public class Ability : ScriptableObject
     {
         Primary,
         Secondary,
-        Hybrid
+        Hybrid,
+        Synergised
     }
 
     public string abilityName = "New Ability";                        // The name of the ability in menus and gameplay

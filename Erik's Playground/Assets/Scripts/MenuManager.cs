@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Controls the opening and closing of the games menus, triggering the changing of menu pages as well as the pausing of gameplay.
+/// </summary>
 public class MenuManager : MonoBehaviour
 {
     public GameObject InventoryMenu;   // reference to the gameObject containing all the inventory management UI
@@ -9,16 +12,10 @@ public class MenuManager : MonoBehaviour
 
     bool pauseMenuOpen = false;        // set to true when Pause Menu is open
     bool inventoryOpen = false;        // set to true when Inventory Menu is open
-    bool pauseGameplay = false;        // ture when any menu is open
+    bool pauseGameplay = false;        // true when any menu is open
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        // These menus must be set active for a moment to assure that important Awake() functions within them run
-        //InventoryMenu.SetActive(true);    // temporarily activates the inventory UI elements
-        //InventoryMenu.SetActive(false);   // deactivates the inventory UI elements again
-        // add the pause menu here too
-    }
+    public InventoryManager inventoryManager;   // reference to inventory manager, to trigger the changing of pages
+
 
     // Update is called once per frame
     void Update()
@@ -59,5 +56,18 @@ public class MenuManager : MonoBehaviour
             }
         }
 
+        // Here we chack if the player tries to change pages in the inventory
+        if (inventoryOpen == true)                             // First, we ensure the inventory is open
+        {
+            if (Input.GetButtonDown("MenuPageLeft"))           // Check if the 'Previous Page' control is being pressed
+            {
+                inventoryManager.PreviousInventoryPage();
+            }
+            else if (Input.GetButtonDown("MenuPageRight"))     // Check if the 'Next Page' control is being pressed
+            {
+                inventoryManager.NextInventoryPage();
+            }
+        }
+        
     }
 }

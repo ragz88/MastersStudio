@@ -1,14 +1,21 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
+/// <summary>
+/// Handles the sorting of abilities when adding and removing them, and the navigation of inventory menu pages.
+/// </summary>
 public class InventoryManager : MonoBehaviour
 {
-    public Transform inventorySectionsParent;        // A Transform that parents all the Inventory Section Components
-    public InventorySection[] inventorySections;     // Stores the different Inventory Sections split up by category and type
+    public Transform inventorySectionsParent;                       // A Transform that parents all the Inventory Section Components
+    public InventorySection[] inventorySections;                    // Stores the different Inventory Sections split up by category and type
+    public EquippedAbilitiesController equippedAbilityController;   // Stores a reference to the inventory manager for our 8 equipped ability slots
 
-    public GameObject[] categoryPanels;              // Stores a reference to each inventory page (panel) - i.e Jumps, Melee, Ranged and Defences
-    int currentCategoryPanel = 0;                    // Index of the currently showing category panel within the categoryPanels array
+    public GameObject[] categoryPanels;     // Stores a reference to each inventory page (panel) - i.e Jumps, Melee, Ranged and Defences
+    int currentCategoryPanel = 0;           // Index of the currently showing category panel within the categoryPanels array
+
+    public Text[] colourChangingTexts;      // reference to all text elements in the inventory menu that must change colour when the munu changes
 
     // The singleton ensures that only one instance of this script will ever exist at a given time
     #region Singleton
@@ -40,10 +47,12 @@ public class InventoryManager : MonoBehaviour
         {
             inventorySections[i].InitialiseSlots();
         }
-        
-        categoryPanels[0].SetActive(true);         // we set one of our category panels to active                 
 
-        // and all the rest are made inactive. Only one can show at a time.
+        equippedAbilityController.InitialiseSlots();
+        
+        categoryPanels[0].SetActive(true);         // we set one of our category panels to active - this will be the default when the menu opens...                 
+
+        // ...and all the rest are made inactive. Only one can show at a time.
         for (int i = 1; i < categoryPanels.Length; i++)
         {
             categoryPanels[i].SetActive(false);
@@ -52,7 +61,7 @@ public class InventoryManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Finds the corrct inventory section for an ability and adds it to that section's ability list. 
+    /// Finds the correct inventory section for an ability and adds it to that section's ability list. 
     /// This happens when it is picked up or unequipped.
     /// </summary>
     /// <param name="newAbility">The ability to be added.</param>
@@ -127,12 +136,18 @@ public class InventoryManager : MonoBehaviour
             Debug.LogWarning("Correct ability section could not be found when trying to remove " + removedAbility.name);
         }
 
+
     }
+
+
+
+
+
 
     /// <summary>
     /// Deactivates the current categoryPanel and activates the next one.
-    /// To be called when the RightArrow is clicked in the UI
-    /// In the final, this will be upgraded to a fade or a lerp.
+    /// To be called when the 'Next Page' control is pressed by player.
+    /// <para>In the final, this will be upgraded to a fade or a lerp.</para>
     /// </summary>
     public void NextInventoryPage()
     {
@@ -147,8 +162,8 @@ public class InventoryManager : MonoBehaviour
 
     /// <summary>
     /// Deactivates the current categoryPanel and activates the previous one.
-    /// To be called when the RightArrow is clicked in the UI
-    /// In the final, this will be upgraded to a fade or a lerp.
+    /// To be called when the 'Previous Page' control is pressed by player.
+    /// <para>In the final, this will be upgraded to a fade or a lerp.</para>
     /// </summary>
     public void PreviousInventoryPage()
     {
