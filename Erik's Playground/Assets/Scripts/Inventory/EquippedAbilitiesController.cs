@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using System.Linq;      // used for our array sort function in IniitialiseSlots()
 
 public class EquippedAbilitiesController : MonoBehaviour
@@ -39,17 +41,33 @@ public class EquippedAbilitiesController : MonoBehaviour
     /// </summary>
     public void UpdateUI()
     {
+        Ability clearedAbility = null;              // will only store an ability if the slot we have currently selected is cleared.
+
         // Loops through all plausible spaces for equipped abilities
         for (int i = 0; i < equippedAbilities.Length; i++)
         {
             if (equippedAbilities[i] != null)      // checks if there is an ability equipped in each specific space
             {
-                equippedAbilitySlots[i].AddAbility(equippedAbilities[i]);     // updates the UI to the ccorrect ability if there is on present
+                equippedAbilitySlots[i].AddAbility(equippedAbilities[i]);     // updates the UI to the correct ability if there is on present
             }
             else                                   // implies no ability equipped in this slot
             {
+                // This implies we're about to clear the slot we have selected right now.
+                // This will deselect all slots, which is an issue for controller players.
+                if (equippedAbilitySlots[i].gameObject == EventSystem.current.currentSelectedGameObject)
+                {
+                    clearedAbility = equippedAbilitySlots[i].ability;         // Let's remember the ability we had selected when this happened
+                }
+
                 equippedAbilitySlots[i].ClearSlot();                          // cleans out the slot if no ability is present in that slot's index
             }
+        }
+
+        // This implies we currently have nothing selected, as we disabled the button we had selected. This would leave contoller players stranded.
+        if (clearedAbility != null)
+        {
+            // So we try to select a relevant ability to prevent this.
+            InventoryManager.inventoryInstance.selectSpecificAbility(clearedAbility);
         }
     }
 
@@ -190,16 +208,24 @@ public class EquippedAbilitiesController : MonoBehaviour
     /// <param name="index">The position in the arrays the ability should be added to</param>
     void AddAbility(Ability abilityToAdd, int index)
     {
+        // Check if there was already an ability equipped here
+        if (equippedAbilities[index] != null)
+        {
+            // and if so, we tell it it's being unequipped
+            equippedAbilities[index].abilityEquipped = false;
+        }
+
         // Equipping the new ability. 
         // Automatically overwrites what was originally there.
-        //equippedAbilitySlots[index].AddAbility(abilityToAdd); ====================================================================
         equippedAbilities[index] = abilityToAdd;
 
         // Remove the new ability from the regular inventory
-        inventoryManager.RemoveAbility(abilityToAdd);
 
         // Updates 'Equipped Abilities' Inventory slots
         UpdateUI();
+
+        // Lastly, after successfully completing all the previous steps, we can update the ability's status to equipped.
+        abilityToAdd.abilityEquipped = true;
     }
 
 
@@ -219,10 +245,11 @@ public class EquippedAbilitiesController : MonoBehaviour
         if (abilityIndex != -1)     // this implies we were able to find a matching ability to unequip
         {
             // Puts the ability back into the general inventory
-            inventoryManager.StoreAbility(equippedAbilities[abilityIndex]);
-            
+
+            // We return the ability's status to it's initial, unequipped state. This must only be done if we're sure we can unequip it, hence it's done here.
+            unequippedAbility.abilityEquipped = false;
+
             // Unequips the ability, removing it from the relevent arrays
-            //equippedAbilitySlots[abilityIndex].ClearSlot(); ===================================================================
             equippedAbilities[abilityIndex] = null;
 
             // Updates 'Equipped Abilities' inventory slots

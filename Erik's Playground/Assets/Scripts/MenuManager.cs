@@ -14,7 +14,7 @@ public class MenuManager : MonoBehaviour
     bool inventoryOpen = false;        // set to true when Inventory Menu is open
     bool pauseGameplay = false;        // true when any menu is open
 
-    public InventoryManager inventoryManager;   // reference to inventory manager, to trigger the changing of pages
+    //public InventoryManager inventoryManager;   // reference to inventory manager, to trigger the changing of pages
 
 
     // Update is called once per frame
@@ -35,6 +35,7 @@ public class MenuManager : MonoBehaviour
                 inventoryOpen = true;
                 pauseGameplay = true;
                 InventoryMenu.SetActive(true);    // activates the inventory UI elements
+                InventoryManager.inventoryInstance.SelectFirstAvailableSlot();     // ensure a slot is selected for controller navigation
                 Time.timeScale = 0f;
             }
         }
@@ -61,11 +62,11 @@ public class MenuManager : MonoBehaviour
         {
             if (Input.GetButtonDown("MenuPageLeft"))           // Check if the 'Previous Page' control is being pressed
             {
-                inventoryManager.PreviousInventoryPage();
+                InventoryManager.inventoryInstance.PreviousInventoryPage();
             }
             else if (Input.GetButtonDown("MenuPageRight"))     // Check if the 'Next Page' control is being pressed
             {
-                inventoryManager.NextInventoryPage();
+                InventoryManager.inventoryInstance.NextInventoryPage();
             }
         }
         

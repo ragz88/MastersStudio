@@ -13,6 +13,10 @@ MonoBehaviour:
   m_Name: StandardBlock
   m_EditorClassIdentifier: 
   abilityName: Standard Block
+  abilityDescription: Hold DEFEND to prevent damage from incoming attackd from the
+    front.
   icon: {fileID: 21300000, guid: e4d7ce03637fa3c4891149382cb1798e, type: 3}
   abilityCategory: 3
   abilityType: 0
+  abilityEquipped: 0
+  currentHybridType: 0

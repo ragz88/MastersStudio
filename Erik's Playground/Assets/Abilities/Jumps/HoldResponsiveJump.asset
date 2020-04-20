@@ -13,6 +13,9 @@ MonoBehaviour:
   m_Name: HoldResponsiveJump
   m_EditorClassIdentifier: 
   abilityName: Hold Responsive Jump
+  abilityDescription: The longer one holds JUMP, the higher they will jump.
   icon: {fileID: 21300000, guid: 20721d87b5419084fa8ab37cbfdef25e, type: 3}
   abilityCategory: 0
   abilityType: 1
+  abilityEquipped: 0
+  currentHybridType: 0

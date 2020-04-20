@@ -13,6 +13,13 @@ MonoBehaviour:
   m_Name: FullBodyShot
   m_EditorClassIdentifier: 
   abilityName: Full Body Shot
+  abilityDescription: 'Press SHOOT to fire a projectile the size of yourself straight
+    forward. This projectile travels through enemies, dealing moderate damage.
+
+    Takes
+    a moment to recharge after use.'
   icon: {fileID: 21300000, guid: 20721d87b5419084fa8ab37cbfdef25e, type: 3}
   abilityCategory: 2
   abilityType: 2
+  abilityEquipped: 0
+  currentHybridType: 0

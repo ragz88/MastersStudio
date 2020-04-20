@@ -42,6 +42,8 @@ public class PickupBehaviour : MonoBehaviour
                 // Instantiate particles can be added here
                 interactionPrompt.ObjectPickedUp();
                 InventoryManager.inventoryInstance.StoreAbility(ability);
+                ability.abilityEquipped = false;                             // We need to reset this property the first time the player encounters
+                                                                             // the ability, as it can persist accross sessions with scriptable objects.
                 Destroy(gameObject);
             }
         }

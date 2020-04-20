@@ -13,6 +13,13 @@ MonoBehaviour:
   m_Name: Homing Shot
   m_EditorClassIdentifier: 
   abilityName: Homing Shots
+  abilityDescription: 'Press SHOOT to fire a small, homing projectile that tracks
+    a selected enemy within range.
+
+    These can be fired quickly, but deal low
+    damage with no knock back.'
   icon: {fileID: 21300000, guid: e1f310488717e7e41a2f2b032fa72134, type: 3}
   abilityCategory: 2
   abilityType: 0
+  abilityEquipped: 0
+  currentHybridType: 0
