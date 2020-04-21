@@ -40,10 +40,7 @@ public class AbilityInfoPrompt : MonoBehaviour
     {
         // We check if the player was holding this prompt's button in the exact moment it appeared on screen.
         // If so, they were probably holding that button for a previous action, so we'll wait for them to lift their finger.
-        if (Input.GetButton(promptButton))
-        {
-            waitForFingerLift = true;
-        }
+        // PromptButtonStillHeld();
     }
 
     // Update is called once per frame
@@ -103,7 +100,29 @@ public class AbilityInfoPrompt : MonoBehaviour
 
     public void OnDrop()
     {
+        Ability abilityBeingDropped = abilityInfoDisplay.currentlySelectedAbility;
 
+        // We store the coordinates we want the object to spawn at - the player's current position.
+        // The second vector prevents 2 pickups spawning exactly on top of each other, which prevent's their colliders pushing them away from one another.
+        Vector3 dropPoint = GameManager.gameManagerInstance.player.transform.position + new Vector3(Random.Range(0.01f, 0.1f), 0.2f);  
+
+        // Then, we instantiate a default pickup, while keeping a reference to it.
+        GameObject droppedPickupGO = Instantiate(InventoryManager.inventoryInstance.pickupPrefab, dropPoint, Quaternion.identity) as GameObject;
+
+        // We then get a reference to it's pickup behaviour and set up it's properties to match the dropped ability
+        PickupBehaviour droppedPickupBehaviour = droppedPickupGO.GetComponentInChildren<PickupBehaviour>();
+        droppedPickupBehaviour.AssignAbility(abilityBeingDropped);
+
+        // Finally, we need to remove the ability from all relevant arrays
+        if (abilityBeingDropped.abilityEquipped)                                 // check if the ability is equipped
+        {
+            equippedAbilitiesController.UnequipAbility(abilityBeingDropped);     // and if so, unequip it                                              
+        }
+
+        InventoryManager.inventoryInstance.RemoveAbility(abilityBeingDropped);   // then, we remove it from the inventory
+
+        abilityInfoDisplay.AbilitySelected(abilityInfoDisplay.currentlySelectedAbility);     // This ensures the UI and information that the info
+                                                                                             // panel displays is updated.
     }
 
     public void OnUnequip()
@@ -145,5 +164,21 @@ public class AbilityInfoPrompt : MonoBehaviour
 
         abilityInfoDisplay.AbilitySelected(abilityInfoDisplay.currentlySelectedAbility);         // This ensures the UI and information that the info
                                                                                                  // panel displays is updated.
+    }
+
+
+    /// <summary>
+    /// Checks if the user is still holding this prompt's button down from a previous interaction, and if so, prevent it affecting this prompt
+    /// until they lift their finger.
+    /// </summary>
+    public void PromptButtonStillHeldCheck()
+    {
+        if (gameObject.activeInHierarchy)             // We need only check this on the prompts that are currently active and visible
+        {
+            if (Input.GetButton(promptButton))
+            {
+                waitForFingerLift = true;
+            }
+        }
     }
 }

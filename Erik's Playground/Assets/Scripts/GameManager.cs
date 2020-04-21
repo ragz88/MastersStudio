@@ -4,12 +4,27 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    public GameObject menuParent;
+    public GameObject player;
+
+    // The singleton ensures that only one instance of this script will ever exist at a given time. This makes the script easy to reference.
+    #region Singleton
+    public static GameManager gameManagerInstance;
 
     private void Awake()
     {
-        //menuParent.SetActive(true);   // we activate this here so that we don't need to leave all the menus active constantly while working in editor
+        // We check if another instance of this exists - if it does, we destroy this. 
+        // This ensures that only one of these objects can ever exist at a time.
+        if (gameManagerInstance == null)
+        {
+            gameManagerInstance = this;
+        }
+        else
+        {
+            Destroy(this);
+        }
     }
+
+    #endregion
 
     // Start is called before the first frame update
     void Start()

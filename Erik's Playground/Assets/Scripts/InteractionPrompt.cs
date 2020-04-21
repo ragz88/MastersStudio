@@ -21,8 +21,8 @@ public class InteractionPrompt : MonoBehaviour
     private void Start()
     {
         promptRend = GetComponent<SpriteRenderer>();
-        initPos = transform.position;
-        hiddenPos = transform.position - new Vector3(0, fadeDistance,0);
+        initPos = transform.localPosition;
+        hiddenPos = transform.localPosition - new Vector3(0, fadeDistance,0);
     }
 
 
@@ -36,14 +36,14 @@ public class InteractionPrompt : MonoBehaviour
                 // compares current y to the target height value (the initial y position)
                 // comparing squares is the equivelent of comparing distance, but avoids the expensive SquareRoot Function
                 // 0.2 is used instead of 0 as the last few millimeters of a lerp take quite a while to complete
-                if (Mathf.Abs( Mathf.Pow(transform.position.y, 2) - Mathf.Pow(initPos.y, 2) ) <=  0.2f)     // lerp is finished 
+                if (Mathf.Abs( Mathf.Pow(transform.localPosition.y, 2) - Mathf.Pow(initPos.y, 2) ) <=  0.2f)     // lerp is finished 
                 {
                     lerping = false;
                 }
                 else        // lerp is not yet complete
                 {
                     // move the prompt up/down
-                    transform.position = Vector3.Lerp(transform.position, initPos, lerpSpeed * Time.deltaTime);
+                    transform.localPosition = Vector3.Lerp(transform.localPosition, new Vector3(0, initPos.y, initPos.z), lerpSpeed * Time.deltaTime);
 
                     // fade the prompt's alpha in
                     if (promptRend.color.a < 1)
@@ -61,28 +61,28 @@ public class InteractionPrompt : MonoBehaviour
                 // compares current y to the target height value (the hiddenPos y position)
                 // comparing squares is the equivelent of comparing distance, but avoids the expensive SquareRoot Function
                 // 0.2 is used instead of 0 as the last few millimeters of a lerp take quite a while to complete
-                if (Mathf.Abs( Mathf.Pow(transform.position.y, 2) - Mathf.Pow(hiddenPos.y, 2) ) <= 0.2f)     // lerp is finished 
+                if (Mathf.Abs( Mathf.Pow(transform.localPosition.y, 2) - Mathf.Pow(hiddenPos.y, 2) ) <= 0.2f)     // lerp is finished 
                 {
                     lerping = false;
 
                     // checks if object was picked up, and if so, destroys the prompt once it's hidden
                     if (destroyOnHide)
                     {
-                        Destroy(gameObject);
-                    }
+                        Destroy(transform.parent.parent.gameObject);           // Destroys the pickup's outer shell, with everything in it
+                    } 
                 }
                 else        // lerp is not yet complete
                 {
                     // move the prompt up/down
-                    transform.position = Vector3.Lerp(transform.position, hiddenPos, lerpSpeed * Time.deltaTime);
-
-                    // fade the prompt's alpha out
-                    if (promptRend.color.a > 0)
-                    {
-                        promptRend.color = new Color(promptRend.color.r, promptRend.color.g, promptRend.color.b,
-                            promptRend.color.a - (fadeSpeed * Time.deltaTime));
-                    }
+                    transform.localPosition = Vector3.Lerp(transform.localPosition, new Vector3(0, hiddenPos.y, hiddenPos.z), lerpSpeed * Time.deltaTime);
                 }
+            }
+
+            // fade the prompt's alpha out
+            if (promptRend.color.a > 0)
+            {
+                promptRend.color = new Color(promptRend.color.r, promptRend.color.g, promptRend.color.b,
+                    promptRend.color.a - (fadeSpeed * Time.deltaTime));
             }
         }
     }
@@ -116,7 +116,6 @@ public class InteractionPrompt : MonoBehaviour
     // also destroys the prompt after it neatly fades away.
     public void ObjectPickedUp()
     {
-        transform.parent = null;
         destroyOnHide = true;
     }
 }

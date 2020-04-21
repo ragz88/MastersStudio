@@ -26,9 +26,30 @@ public class AbilityInfoDisplay : MonoBehaviour
 
     public Ability currentlySelectedAbility = null;   // Stores a reference to the ability currently described by the Ability Information panel
 
+    AbilityInfoPrompt[] infoPagePrompts;       // We''l use this to cache a reference to the AbilityInfoPrompt components on each of our prompt gameObjects
+
     private void Start()
     {
         
+    }
+
+    /// <summary>
+    /// Caches a reference to each prompt's AbilityInfoPrompt component.
+    /// </summary>
+    public void CacheAbilityInfoPromptComponents()
+    {
+        // It's not pretty, but it's more efficient than continually using GetComponent<> or .gameObject - this way we only do that once.
+        infoPagePrompts = new AbilityInfoPrompt[9];
+
+        infoPagePrompts[0] = equipPrompt.GetComponent<AbilityInfoPrompt>();
+        infoPagePrompts[1] = equipPrimaryPrompt.GetComponent<AbilityInfoPrompt>();
+        infoPagePrompts[2] = equipSecondaryPrompt.GetComponent<AbilityInfoPrompt>();
+        infoPagePrompts[3] = unequipPrompt.GetComponent<AbilityInfoPrompt>();
+        infoPagePrompts[4] = unequipPrimaryPrompt.GetComponent<AbilityInfoPrompt>();
+        infoPagePrompts[5] = unequipSecondaryPrompt.GetComponent<AbilityInfoPrompt>();
+        infoPagePrompts[6] = dropPrompt.GetComponent<AbilityInfoPrompt>();
+        infoPagePrompts[7] = sellPrompt.GetComponent<AbilityInfoPrompt>();
+        infoPagePrompts[8] = buyPrompt.GetComponent<AbilityInfoPrompt>();
     }
 
 
@@ -140,6 +161,9 @@ public class AbilityInfoDisplay : MonoBehaviour
             dropPrompt.SetActive(true);       // We have to activate this again, just in case a synnergy was selected.
 
         }
+
+        // we make sure that once the on-screen prompts are updated, the player's currently held input does not affect the new prompts
+        CheckContinualPromptPress();
     }
 
 
@@ -242,4 +266,18 @@ public class AbilityInfoDisplay : MonoBehaviour
         buyPrompt.SetActive(false);
 
     }
+
+
+    /// <summary>
+    /// Checks all the prompts that are currently active to see if their button is still being held from the previous
+    /// action the user performed. If so, all interaction with this prompt is prevented until the user lifts their finger
+    /// </summary>
+    void CheckContinualPromptPress()
+    {
+        for (int i = 0; i < infoPagePrompts.Length; i++)
+        {
+            infoPagePrompts[i].PromptButtonStillHeldCheck();
+        }
+    }
+
 }

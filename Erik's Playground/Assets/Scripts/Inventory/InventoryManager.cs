@@ -17,6 +17,8 @@ public class InventoryManager : MonoBehaviour
 
     public AbilityInfoDisplay abilityInfoDisplay;  // Reference tto the controller for the ability information panel on the right of the menu.
 
+    public GameObject pickupPrefab;                // Used to spawn pickups in the game space when dropped from inventory
+
     // The following region contains all the information needed to update text and image colours as menus change from page to page
     #region DisplayColoursAndHeadings
 
@@ -61,9 +63,9 @@ public class InventoryManager : MonoBehaviour
             inventorySections[i].InitialiseSlots();
         }
 
-        equippedAbilityController.InitialiseSlots();          // allows the EquippedAbilityController to find a reference to all of the InventorySlots in it's children
+        equippedAbilityController.InitialiseSlots();           // allows the EquippedAbilityController to find a reference to all of the InventorySlots in it's children
         
-        categoryPanels[0].gameObject.SetActive(true);         // we set one of our category panels to active - this will be the default when the menu opens...                 
+        categoryPanels[0].gameObject.SetActive(true);          // we set one of our category panels to active - this will be the default when the menu opens...                 
 
         // ...and all the rest are made inactive. Only one can show at a time.
         for (int i = 1; i < categoryPanels.Length; i++)
@@ -71,9 +73,11 @@ public class InventoryManager : MonoBehaviour
             categoryPanels[i].gameObject.SetActive(false);
         }
 
-        UpdateMenuColours();                                  // We set the various heading colours to match the currently displayed category.
-        abilityInfoDisplay.NoAbilitySelected();               // Initialises the information panel in the menu - now does not show any specific info
-                                                              // until the player selects an ability.
+        abilityInfoDisplay.CacheAbilityInfoPromptComponents(); // gets a reference to all the information screen prompts' AbilityInfoPrompt components
+
+        UpdateMenuColours();                                   // We set the various heading colours to match the currently displayed category.
+        abilityInfoDisplay.NoAbilitySelected();                // Initialises the information panel in the menu - now does not show any specific info
+                                                               // until the player selects an ability.
 
     }
 

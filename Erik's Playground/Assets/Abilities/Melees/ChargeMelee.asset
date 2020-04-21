@@ -15,8 +15,8 @@ MonoBehaviour:
   abilityName: Charge Melee
   abilityDescription: Hold in ATTACK to charge a powerful melee attack. The longer
     it is held, the more powerful the attack.
-  icon: {fileID: 21300000, guid: e4d7ce03637fa3c4891149382cb1798e, type: 3}
+  icon: {fileID: 21300000, guid: 20721d87b5419084fa8ab37cbfdef25e, type: 3}
   abilityCategory: 1
   abilityType: 2
   abilityEquipped: 0
-  currentHybridType: 0
+  currentHybridType: 1

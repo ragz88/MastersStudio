@@ -45,6 +45,7 @@ public class Ability : ScriptableObject
     public AbilityType currentHybridType = AbilityType.Primary;       // Used exclusively for Hybrid abilies. Set to either primary or secondary,
                                                                       // based on what they're acting as currently    
 
+
     /// <summary>
     /// Links the abilities functionality to the correct control set, allowing the character to
     /// use the ability.

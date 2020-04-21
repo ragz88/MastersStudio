@@ -15,7 +15,7 @@ MonoBehaviour:
   abilityName: Standard Attack
   abilityDescription: Press ATTACK to whack enemies in front of you. Moderate damage,
     can combo for 3 consecutive hits.
-  icon: {fileID: 21300000, guid: 20721d87b5419084fa8ab37cbfdef25e, type: 3}
+  icon: {fileID: 21300000, guid: e4d7ce03637fa3c4891149382cb1798e, type: 3}
   abilityCategory: 1
   abilityType: 0
   abilityEquipped: 0
