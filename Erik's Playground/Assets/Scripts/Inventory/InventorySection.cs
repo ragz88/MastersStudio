@@ -27,13 +27,21 @@ public class InventorySection : MonoBehaviour
     /// </summary>
     public void UpdateUI()
     {
-        Ability clearedAbility = null;              // will only store an ability if the slot we have currently selected is cleared.
+        Ability changedAbility = null;              // will only store an ability if the slot we have currently selected is cleared or updated.
         
         // Loops through entire slot collection for a specific section
         for (int i = 0; i < slots.Length; i++)
         {
             if (i < abilities.Count)       // Ensures we only add as many abilities as there are in our list
             {
+                // This implies we're about to change the slot we have selected right now.
+                // This will deselect all slots, which is an issue for controller players.
+                if (slots[i].gameObject == EventSystem.current.currentSelectedGameObject)
+                {
+                  //changedAbility = slots[i].ability;         // Let's remember what the new ability placed in this slot it, so we can update 
+                    changedAbility = abilities[i];             // the details in the info panel   
+                }
+
                 slots[i].AddAbility(abilities[i]);
             }
             else
@@ -42,7 +50,7 @@ public class InventorySection : MonoBehaviour
                 // This will deselect all slots, which is an issue for controller players.
                 if (slots[i].gameObject == EventSystem.current.currentSelectedGameObject)
                 {
-                    clearedAbility = slots[i].ability;         // Let's remember the ability we had selected when this happened
+                    changedAbility = slots[i].ability;         // Let's remember the ability we had selected when this happened
 
                 }
 
@@ -51,10 +59,10 @@ public class InventorySection : MonoBehaviour
         }
 
         // This implies we currently have nothing selected, as we disabled the button we had selected. This would leave contoller players stranded.
-        if (clearedAbility != null)
+        if (changedAbility != null)
         {
             // So we try to select a relevant ability to prevent this.
-            InventoryManager.inventoryInstance.selectSpecificAbility(clearedAbility);
+            InventoryManager.inventoryInstance.selectSpecificAbility(changedAbility);
         }
     }
 
