@@ -4,22 +4,11 @@ using UnityEngine;
 
 
 /// <summary>
-/// Stores the audio clips of a specific instrument in a section. These inlude the low, medium and high energy versions of that instrument.
+/// Eases the process of creating of new instruments. Used to categorise musicNodes within a Song.
 /// </summary>
 [CreateAssetMenu(fileName = "New Instrument", menuName = "Dynamic Music/Instrument")]
 public class Instrument : ScriptableObject
 {
-    public string instrumentName;
-
-    // Stores the audio for this instrument's notes in a section that should play at 
-    // low energy moments in gameplay
-    public AudioClip lowClip;
-
-    // Stores the audio for this instrument's notes in a section that should play at 
-    // average energy moments in gameplay
-    public AudioClip medClip;
-
-    // Stores the audio for this instrument's notes in a section that should play at 
-    // high energy moments in gameplay
-    public AudioClip highClip;
+    public string instrumentName;         // pointless right now
+    //public MusicNode instrumentNodes;   // These are all the nodes linked to this instrument, stored in sectional order.
 }

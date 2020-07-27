@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 75520eef082852441879862f00e73ef1, type: 3}
+  m_Name: ErikInitSectionA
+  m_EditorClassIdentifier: 
+  sectionName: ErikInitSectionA
+  sectionBackground: {fileID: 8300000, guid: 0d1616107349c0942ba19dc89b1d4973, type: 3}
+  sectionEnergy: 0
+  instruments:
+  - {fileID: 11400000, guid: b352aed6b88a3ce48898bdf36c06c926, type: 2}
+  - {fileID: 11400000, guid: 98643056a4b0fb642a776d0be6d0289d, type: 2}
+  - {fileID: 11400000, guid: cfd4c9eeab4c2324ea87269d2098bff1, type: 2}
+  - {fileID: 11400000, guid: 27addb947461ad542bbc041a9a2bd8c1, type: 2}
