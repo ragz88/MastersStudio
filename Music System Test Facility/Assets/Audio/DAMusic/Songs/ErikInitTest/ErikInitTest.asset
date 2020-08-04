@@ -13,9 +13,6 @@ MonoBehaviour:
   m_Name: ErikInitTest
   m_EditorClassIdentifier: 
   songName: ErikInitiTest
-  songSectionEnergies:
-  - 0.86
-  - 4.14
   musicNodes:
   - {fileID: 11400000, guid: 5d3867c65966a384c88814659ab32a84, type: 2}
   - {fileID: 11400000, guid: d456525a13f656940994f62e32390adf, type: 2}
@@ -25,8 +22,19 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 2805b252e3f11da4eabb5e9a0e846762, type: 2}
   - {fileID: 11400000, guid: 8fd446f815eb24b44903afd30f3777a6, type: 2}
   - {fileID: 11400000, guid: 02a8b175db01b5044a05313e2619c7f2, type: 2}
+  - {fileID: 11400000, guid: 5f806e501a579f24499deb74f87e5166, type: 2}
+  - {fileID: 11400000, guid: dda476aa3dadfdd499e92fefd6ae73a3, type: 2}
+  finalSection: 1
+  lowestSection: 0
+  highestSection: 1
   songInstruments:
   - {fileID: 11400000, guid: b352aed6b88a3ce48898bdf36c06c926, type: 2}
   - {fileID: 11400000, guid: 98643056a4b0fb642a776d0be6d0289d, type: 2}
   - {fileID: 11400000, guid: cfd4c9eeab4c2324ea87269d2098bff1, type: 2}
   - {fileID: 11400000, guid: 27addb947461ad542bbc041a9a2bd8c1, type: 2}
+  - {fileID: 11400000, guid: 07293bee0f4948c4484341d0e45a635d, type: 2}
+  sectionDetails:
+  - songSectionEnergy: 1.11
+    forwardLinks: 01000000
+  - songSectionEnergy: 3.64
+    forwardLinks: 00000000

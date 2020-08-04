@@ -357,6 +357,8 @@ MonoBehaviour:
   DefenseLevel: 1
   MobilityLevel: 2
   categoryMax: 3
+  medClipThreshold: 1
+  highClipThreshold: 3
   musicSources:
   - {fileID: 640705480}
   - {fileID: 1630891323}
@@ -369,6 +371,9 @@ MonoBehaviour:
   - {fileID: 869702036}
   tempFadeOutSource: {fileID: 8310328401277108164, guid: 60bb7482ad66f4844b9c5c3665cdcf03,
     type: 3}
+  currentSong: {fileID: 11400000, guid: 7c0db26f1f77b5f46a470000ed3d8df6, type: 2}
+  backgroundInstrument: {fileID: 11400000, guid: 07293bee0f4948c4484341d0e45a635d,
+    type: 2}
   SectionControl: 1
   NodeLevels: 1
 --- !u!4 &242552572
@@ -2090,7 +2095,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 1.707}
+  m_AnchoredPosition: {x: 3.1, y: 4.277}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1165203573

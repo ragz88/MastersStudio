@@ -1,9 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.Audio;
 using UnityEngine;
 
 public class MusicControllerDA : MonoBehaviour
 {
+    public float dynamicMusicVolume = 0;
+    
     public float minLevelValue = 0.25f;     // Minimum value any of the categories can ever sink to.
     public float maxLevelValue = 2.99f;     // Maximum value any of the categories can ever rise to.
     
@@ -17,6 +20,14 @@ public class MusicControllerDA : MonoBehaviour
     private float MobilityLevel = 1;        // Increases each time player jumps/dashes/slides etc. ().
 
     public float categoryMax = 2f;          // Max amount a category can be
+    public float medClipThreshold = 1;      // The point at which the low clip of a node will stop playing, and the medium one will start playing
+    public float highClipThreshold = 3;     // The point at which the med clip of a node will stop playing, and the high one will start playing  -- For this testing ground, this is still out of the possible range
+    
+    private float playstyleEnergy = 0;      // Sum of all three energy levels, each with a max value of categoryMax
+                                            // Note that the 0.99 buffer is just for timing purposes - the value used for logic will never be higher that 
+                                            // categoryMax
+
+    public const float standardMusicFadeSpeed = 2f;    // Speed at which songs/clips fade out and fade in  
 
     // Stores a reference to each AudioSource used to play music and the temp AudioSources used for transitioning between musical states.
     // The order these sources are assigned with is specific, and represented below.
@@ -37,10 +48,13 @@ public class MusicControllerDA : MonoBehaviour
         SetPieceSource                       // Used to play set pieces of music in cutscenes/boss fights/transitions etc.
     }
 
+    // This is used to edit the volume, among other qualities, of our music Audio sources all at once
+    public AudioMixer MusicMasterMixer;
+
     public GameObject tempFadeOutSource;     // A special prefab that plays a sound with constantly decreasing volume until it deletes itself.
 
 
-    Song currentSong;                        // The current song in this area (collection of MusicNodes)
+    public Song currentSong;                 // The current song in this area (collection of MusicNodes)
     int currentSongSection = 0;              // Stores the index of the current song section in the 2D sortedNode array
     float currentSectionLength = 0;          // Stores the length (in seconds) of the current song section playing
     float currentSectionTimer = 0;           // used to check if the current section is complete. Increases each frame.
@@ -48,9 +62,12 @@ public class MusicControllerDA : MonoBehaviour
     // We initialise these to -1 in case the player has no ability (and thus, no instrument) equipped in that slot
 
     int mobilityInstrumentIndex = -1;        // The index of the player's mobility ability's inherent instrument within the song's 2D sortedNodes array.
-    int OffenseInstrumentIndex  = -1;        // The index of the player's mobility ability's inherent instrument within the song's 2D sortedNodes array.
-    int DefenseInstrumentIndex  = -1;        // The index of the player's mobility ability's inherent instrument within the song's 2D sortedNodes array.
+    int OffenseInstrumentIndex  = -1;        // The index of the player's offense ability's inherent instrument within the song's 2D sortedNodes array.
+    int DefenseInstrumentIndex  = -1;        // The index of the player's defense ability's inherent instrument within the song's 2D sortedNodes array.
+    int BackgroundInstrumentIndex = -1;      // The index of the background clips within the song's 2D sortedNodes array.
 
+
+    public Instrument backgroundInstrument;
 
     // These are specifically for playtesting now - TO BE REMOVED ONCE WE DECIDE WHAT WE LIKE
     #region Playtesting Bools
@@ -142,7 +159,17 @@ public class MusicControllerDA : MonoBehaviour
         //CheckLowMedHigh();
 
 
-        // LERP SONG VOLUME - DON'T SET THEM!!!
+        // Here, we increase current mixer's volume to the user-defined max level if it's too low =================================
+        // This temporary float is used to extract and examine the current volume of our dynamic music in our music mixer
+        float currentDynamicMusicVolume = 0;
+        MusicMasterMixer.GetFloat("DynamicMusicVolume", out currentDynamicMusicVolume);
+
+        // Let's check if the current volume is high enough - if not, we'll increase it gradually.
+        if (currentDynamicMusicVolume < dynamicMusicVolume)
+        {
+            MusicMasterMixer.SetFloat("DynamicMusicVolume", currentDynamicMusicVolume + (Time.deltaTime*standardMusicFadeSpeed));
+        }
+        // ========================================================================================================================
     }
 
 
@@ -153,25 +180,171 @@ public class MusicControllerDA : MonoBehaviour
     public void LoadNewSong(Song newSong)
     {
         newSong.InitialiseSong();
+
+        // After initialising a song, we want to cache any background tracks that should always be playing
+        BackgroundInstrumentIndex = -1;                                            // We reinitialise in case a backing track doesn't exist
+
+        // The loop through the instruments looking for a Background Instrument
+        for (int i = 0; i < newSong.songInstruments.Count; i++)
+        {
+            if (newSong.songInstruments[i] == backgroundInstrument)
+            {
+                BackgroundInstrumentIndex = i;
+                break;
+            }
+        }
+
+        // Here we check that this isn't the first song we're loading, and if not we slowly fade the current song out
+        if (currentSong != null)
+        {
+            FadeOutCurrentSong();
+        }
+
+        // Now that the old song is safely fading away, we can update the currently cached song
+        currentSong = newSong;
+
+        // Once the new song is loaded, we'll need to reload our instrument/song pairs, as the relevent instruments for each ability 
+        // will potentially change from song to song
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+        // We can then start the first section of the new song. We want to start it with a volume of 0 - allowing it to naturally fade in (in update this happens)
+        LoadSongSection(0);
+        ResetSongVolume();
     }
 
 
     /// <summary>
-    /// Examines current ability category levels as well as energy levels of the sectiona that can naturally follow the
+    /// Creates temporary FadeOut objects for each Audio Source currently playing, fading out the entire song in one go.
+    /// </summary>
+    void FadeOutCurrentSong()
+    {
+        // We'll look through all the audio sources used to play music
+        for (int i = 0; i < musicSources.Length; i++)
+        {
+            // ...and if we find one that is currently playing something...
+            if (musicSources[i].isPlaying)
+            {
+                // ...we tell it to fade out what it's playing
+                FadeOut(musicSources[i], standardMusicFadeSpeed);
+            }
+        }
+    }
+
+
+    /// <summary>
+    /// Sets the current song's volume to 0 using the DynamicMusic Mixer Group. This will normally automatically be lerped back to the 
+    /// user defined volume level in the update loop. Will conserve the various source proportions, save a bit of processing power
+    /// and won't affect Temp sources (which run through a different mixer group)
+    /// </summary>
+    public void ResetSongVolume()
+    {
+        MusicMasterMixer.SetFloat("DynamicMusicVolume", 0);
+    }
+
+
+    /// <summary>
+    /// Examines current ability category levels as well as energy levels of the sections that can naturally follow the
     /// current section and chooses an appropriate section to transition into.
     /// </summary>
     public void NextSongSection()
     {
-        if (SectionControl)
+        if (SectionControl)  // When using Section control, we Have to analyse the current energy of the player's playstyle and choose a section with energy to match
         {
+            UpdatePlaystyleEnergy();              // Calculate a new total energy reflecting the player's playstyle
+
+            // First we'll check if our playstyle energy is smaller than the lowest rated section of this song, and if we're already playing that lowest section
+            if (currentSongSection == currentSong.lowestSection && currentSong.sectionDetails[currentSongSection].songSectionEnergy > playstyleEnergy)
+            {
+                // if so (because each individual section is loopable), we'll just load this section again
+                LoadSongSection(currentSongSection);
+            }
+            // if that wasn't the case, we check if our playstyle energy is bigger than the highest rated section of this song, and if we're already playing that highest section
+            else if (currentSongSection == currentSong.highestSection && currentSong.sectionDetails[currentSongSection].songSectionEnergy < playstyleEnergy)
+            {
+                // if so (because each individual section is loopable), we'll just load this section again
+                LoadSongSection(currentSongSection);
+            }
+            // if not, our current energy is somewhere in the middle of the possible energies of the song. We'll need to search for a section with a similar 
+            // energy to match it from our list of possible forward links
+            else
+            {    
+                // The next step is a little wild - but what we're doing is looking for all the song sections that have an energy lower 
+                // than our current playstyle energy, and from these caching the index of the one that is closest to the current
+                // playstyle energy. 
+
+                int newSongSection = -1;              // this will store the most eligible section index from the list of forward links we search through.
+                int[] currentSectionForwardLinks = currentSong.sectionDetails[currentSongSection].forwardLinks;  // caching our current section's forward links (for easy, and efficient reference)
+
+                for (int i = 0; i < currentSectionForwardLinks.Length; i++)
+                {
+                    // first, we check if the link we're looking at has lower energy than our current playstyle
+                    if (currentSong.sectionDetails[currentSectionForwardLinks[i]].songSectionEnergy < playstyleEnergy)
+                    {
+                        // then we check if we'd already found an eligible link with a lower energy than our current playstyle
+                        if (newSongSection != -1)
+                        {
+                            // if so, we check if it has higher energy than any previous eligible links we had found.
+                            if (currentSong.sectionDetails[newSongSection].songSectionEnergy <
+                                currentSong.sectionDetails[currentSectionForwardLinks[i]].songSectionEnergy)
+                            {
+                                // and if it is, we cache this index instead
+                                newSongSection = currentSectionForwardLinks[i];
+                            }
+                        }
+                        else
+                        {
+                            newSongSection = currentSectionForwardLinks[i];    // we found our first eligible link! Let's cache it.
+                        }
+                    }
+                }
+
+
+                if (newSongSection != -1)  // This implies we found the nearest linked section with an energy lower than our current playstyle.
+                {
+                    LoadSongSection(newSongSection);
+                }
+                else  // this implies that no lower index was found - so we'll find the lowest energy section possible in our forwardLinks
+                {
+                    // first we'll equip the first index from our forward links to give us a reference point to compare to the other forward links
+                    newSongSection = currentSectionForwardLinks[0];
+
+                    for (int i = 0; i < currentSectionForwardLinks.Length; i++)
+                    {
+                        // we compare our current index's energy to the ith index's energy to find the smallest energy in the list of forward links
+                        if (currentSong.sectionDetails[currentSectionForwardLinks[i]].songSectionEnergy <
+                            currentSong.sectionDetails[newSongSection].songSectionEnergy)
+                        {
+                            newSongSection = currentSectionForwardLinks[i];
+                        }
+                    }
+
+                    // now that we have the lowest energy section's index from our list of forward links, we can load it
+                    LoadSongSection(newSongSection);
+                }
+
+            }
 
         }
-        else
+        else  // Implies we aren't using section control
         {
             // If we aren't using section control, we'll just load the next song section in the array.
             // The mod function below makes the number automatically cycle back to 0 if it was about to go out of the array bounds
             LoadSongSection( (currentSongSection + 1) % currentSong.finalSection );    
         }
+    }
+
+
+
+    /// <summary>
+    /// Takes the three category levels, clamps them to a maximum of categoryMax, and calculates a total value that reflects
+    /// the energy of the player's current playstyle.
+    /// </summary>
+    public void UpdatePlaystyleEnergy()
+    {
+        playstyleEnergy = Mathf.Clamp(MobilityLevel, 0, categoryMax) +
+            Mathf.Clamp(OffenseLevel, 0, categoryMax) +
+            Mathf.Clamp(DefenseLevel, 0, categoryMax);
     }
 
 
@@ -190,12 +363,54 @@ public class MusicControllerDA : MonoBehaviour
         // We reset the timer, so it can start timing the new section that was just loaded.
         currentSectionTimer = 0;
 
-        // =======================================================================================================================================================================
-        // Find the instruments linked to the currently equipped abilities
-        // Extract their indeces and store them
-        // Load the relative audio clips into the manager's Audio sources and play them
 
-        // Write the 
+        // Next we update the clips in our audio sources to those of the new sections. We'll have to check the current energy levels too
+        // =============================================================================================================
+
+        // Mobility clip updating
+        musicSources[(int)MusicSourceIndex.Mobility].clip = 
+                    GetCorrectEnergyClip(currentSong.sortedNodes[mobilityInstrumentIndex, currentSongSection], MobilityLevel);
+        musicSources[(int)MusicSourceIndex.Mobility].Play();
+
+        // Mobility clip updating
+        musicSources[(int)MusicSourceIndex.Offense].clip =
+                    GetCorrectEnergyClip(currentSong.sortedNodes[OffenseInstrumentIndex, currentSongSection], OffenseLevel);
+        musicSources[(int)MusicSourceIndex.Offense].Play();
+
+       // Mobility clip updating
+       musicSources[(int)MusicSourceIndex.Defense].clip =
+                    GetCorrectEnergyClip(currentSong.sortedNodes[DefenseInstrumentIndex, currentSongSection], DefenseLevel);
+        musicSources[(int)MusicSourceIndex.Defense].Play();
+
+        musicSources[(int)MusicSourceIndex.Background].clip = currentSong.sortedNodes[DefenseInstrumentIndex, currentSongSection].lowClip;
+        musicSources[(int)MusicSourceIndex.Background].Play();
+        // =============================================================================================================
+
+    }
+
+
+    /// <summary>
+    /// Compares the given value to the Clip Thresholds and returns either the low energy, medium energy or high energy clip associated
+    /// with the given node.
+    /// </summary>
+    /// <param name="node">The node that the clip will be extracted from.</param> <param name="currentEnergyLevel">The current energy level
+    /// relevent to this node.</param>
+    /// <returns>Low, Medium or High audio clip associated with the given node</returns>
+    public AudioClip GetCorrectEnergyClip(MusicNode node, float currentEnergyLevel)
+    {
+        if (currentEnergyLevel >= highClipThreshold)          // Playstyle is high energy
+        {
+            return node.highClip;
+        }
+        else if (currentEnergyLevel >= medClipThreshold)      // Playstyle is medium energy
+        {
+            return node.medClip;
+        }
+        else                                                  // Playstyle is low energy
+        {
+            return node.lowClip;
+        }
+    
     }
 
 
@@ -263,7 +478,7 @@ public class MusicControllerDA : MonoBehaviour
         {
             case Ability.AbilityCategory.Mobility:
 
-                FadeOut(musicSources[(int)MusicSourceIndex.Mobility], 2);                       // Creates a temporary object that will gently fade this instrument away
+                FadeOut(musicSources[(int)MusicSourceIndex.Mobility], standardMusicFadeSpeed);  // Creates a temporary object that will gently fade this instrument away
                 mobilityInstrumentIndex = newInstrumentIndex;                                   // Updates the current mobility instrument index
                 musicSources[(int)MusicSourceIndex.Mobility].volume = 0;                        // This will give an automatic fade-in effect, 
                                                                                                 // due to how volume responds to category levels in Update()
@@ -284,7 +499,7 @@ public class MusicControllerDA : MonoBehaviour
 
             case Ability.AbilityCategory.Offense:
 
-                FadeOut(musicSources[(int)MusicSourceIndex.Offense], 2);                        // Creates a temporary object that will gently fade this instrument away
+                FadeOut(musicSources[(int)MusicSourceIndex.Offense], standardMusicFadeSpeed);   // Creates a temporary object that will gently fade this instrument away
                 OffenseInstrumentIndex = newInstrumentIndex;                                    // Updates the current offense instrument index
                 musicSources[(int)MusicSourceIndex.Offense].volume = 0;                         // This will give an automatic fade-in effect, 
                                                                                                 // due to how volume responds to category levels in Update()
@@ -305,7 +520,7 @@ public class MusicControllerDA : MonoBehaviour
 
             case Ability.AbilityCategory.Defense:
 
-                FadeOut(musicSources[(int)MusicSourceIndex.Defense], 2);                        // Creates a temporary object that will gently fade this instrument away
+                FadeOut(musicSources[(int)MusicSourceIndex.Defense], standardMusicFadeSpeed);   // Creates a temporary object that will gently fade this instrument away
                 DefenseInstrumentIndex = newInstrumentIndex;                                    // Updates the current defense instrument index
                 musicSources[(int)MusicSourceIndex.Defense].volume = 0;                         // This will give an automatic fade-in effect, 
                                                                                                 // due to how volume responds to category levels in Update()

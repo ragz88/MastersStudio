@@ -16,6 +16,10 @@ public class Song : ScriptableObject
     
     [HideInInspector]
     public int finalSection = 0;                     // Stores the index of the final section of the song after it's sorted
+    [HideInInspector]
+    public int lowestSection = 0;                    // Stores the index of the section of the song with the least energy after it's sorted
+    [HideInInspector]
+    public int highestSection = 0;                   // Stores the index of the section of the song with the highest energy after it's sorted
 
     /// <summary>
     /// List of all unique instruments in the song. 
@@ -88,7 +92,7 @@ public class Song : ScriptableObject
                 if (songInstruments[j] == musicNodes[i].nodeInstrument)
                 {
                     instrumentPresent = true;
-                    break;                                           // we already founs a match in our list of instruments - we can stop searching
+                    break;                                           // we already found a match in our list of instruments - we can stop searching
                 }
             }
 
@@ -113,6 +117,22 @@ public class Song : ScriptableObject
         if (sectionDetails.Length != finalSection + 1)
         {
             Debug.LogWarning("Number of sections found does not match the number of assigned section energies!");
+        }
+
+        // Finally, with our 2D array set up, we can loop through our sectionDetails and find the lowest and highest energy sections
+        for (int i = 0; i < sectionDetails.Length; i++)
+        {
+            // check if the current section energy is lower than the current lowest section
+            if (sectionDetails[lowestSection].songSectionEnergy > sectionDetails[i].songSectionEnergy)
+            {
+                lowestSection = i;                  // if so, we save it's index as the lowest energy section
+            }
+
+            // check if the current section energy is higher than the current highest section
+            if (sectionDetails[highestSection].songSectionEnergy < sectionDetails[i].songSectionEnergy)
+            {
+                highestSection = i;                 // if so, we save it's index as the highest energy section
+            }
         }
     }
 

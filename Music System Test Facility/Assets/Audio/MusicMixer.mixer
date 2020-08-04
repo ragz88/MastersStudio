@@ -54,6 +54,7 @@ AudioMixerController:
     - 3a6a6478332059a4985d11e4090a878a
     - da7b27ab3630a4f418189ecc2d152a4f
     - 1a125ec0929a2de41a2ff791168c2fb2
+    - 948d2478cb5ddec4fbd2b4fd2f0b534c
     name: View
   m_CurrentViewIndex: 0
   m_TargetSnapshot: {fileID: 24500006}
@@ -68,6 +69,7 @@ AudioMixerGroupController:
   m_GroupID: 3a6a6478332059a4985d11e4090a878a
   m_Children:
   - {fileID: 5794115956703837660}
+  - {fileID: 3049555470570046675}
   - {fileID: -186624219931646067}
   m_Volume: 5633b29effa83ef4b991afb781ec2171
   m_Pitch: b7255d46586a1d743accd8bd3f0d7023
@@ -103,6 +105,25 @@ AudioMixerSnapshotController:
   m_SnapshotID: 0be3d68007fcd07479da49278573dad1
   m_FloatValues: {}
   m_TransitionOverrides: {}
+--- !u!243 &3049555470570046675
+AudioMixerGroupController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: TempFadeSources
+  m_AudioMixer: {fileID: 24100000}
+  m_GroupID: 948d2478cb5ddec4fbd2b4fd2f0b534c
+  m_Children: []
+  m_Volume: 6a41ea0a2a04f514eabc01faaf16ee2b
+  m_Pitch: c9fb94dfcde14c340bb494af4b05caa5
+  m_Send: 00000000000000000000000000000000
+  m_Effects:
+  - {fileID: 9146934282575824948}
+  m_UserColorIndex: 0
+  m_Mute: 0
+  m_Solo: 0
+  m_BypassEffects: 0
 --- !u!243 &5794115956703837660
 AudioMixerGroupController:
   m_ObjectHideFlags: 0
@@ -132,6 +153,20 @@ AudioMixerEffectController:
   m_EffectID: 7676d7e542845fb47a2573974e42d5dd
   m_EffectName: Attenuation
   m_MixLevel: dd70362f3328d1649a48d3fcfda9dc5a
+  m_Parameters: []
+  m_SendTarget: {fileID: 0}
+  m_EnableWetMix: 0
+  m_Bypass: 0
+--- !u!244 &9146934282575824948
+AudioMixerEffectController:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  m_EffectID: 2f86bf625af2ba0439d2eb433b888183
+  m_EffectName: Attenuation
+  m_MixLevel: e1733477922d1e34381f2cae9ef70f78
   m_Parameters: []
   m_SendTarget: {fileID: 0}
   m_EnableWetMix: 0
