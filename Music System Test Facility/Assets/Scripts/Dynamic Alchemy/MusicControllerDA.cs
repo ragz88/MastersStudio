@@ -61,13 +61,16 @@ public class MusicControllerDA : MonoBehaviour
 
     // We initialise these to -1 in case the player has no ability (and thus, no instrument) equipped in that slot
 
-    int mobilityInstrumentIndex = -1;        // The index of the player's mobility ability's inherent instrument within the song's 2D sortedNodes array.
+    int MobilityInstrumentIndex = -1;        // The index of the player's mobility ability's inherent instrument within the song's 2D sortedNodes array.
     int OffenseInstrumentIndex  = -1;        // The index of the player's offense ability's inherent instrument within the song's 2D sortedNodes array.
     int DefenseInstrumentIndex  = -1;        // The index of the player's defense ability's inherent instrument within the song's 2D sortedNodes array.
     int BackgroundInstrumentIndex = -1;      // The index of the background clips within the song's 2D sortedNodes array.
 
 
     public Instrument backgroundInstrument;
+
+    // Used to access the list of currently equipped abilities and find instrument-song pairs when a song changes
+    public EquippedAbilitiesController equippedAbilitiesController;
 
     // These are specifically for playtesting now - TO BE REMOVED ONCE WE DECIDE WHAT WE LIKE
     #region Playtesting Bools
@@ -107,7 +110,11 @@ public class MusicControllerDA : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        // We don't want our music to stop when jumping across scenes - we'll smoothly transition it
         DontDestroyOnLoad(gameObject);
+
+        //We want to get the current mixer setting for volume - later we'll get this value from a PlayerPrefs file
+        MusicMasterMixer.GetFloat("DynamicMusicVolume", out dynamicMusicVolume);
 
         LoadNewSong(currentSong);
 
@@ -156,7 +163,10 @@ public class MusicControllerDA : MonoBehaviour
             NextSongSection();
         }
 
-        //CheckLowMedHigh();
+        //CheckLowMedHigh();   ---> AND ADJUST SOURCE VOLUME ACCORDINGLY
+
+
+
 
 
         // Here, we increase current mixer's volume to the user-defined max level if it's too low =================================
@@ -181,8 +191,33 @@ public class MusicControllerDA : MonoBehaviour
     {
         newSong.InitialiseSong();
 
-        // After initialising a song, we want to cache any background tracks that should always be playing
-        BackgroundInstrumentIndex = -1;                                            // We reinitialise in case a backing track doesn't exist
+        // Next block may be redundant - delete after testing
+        // Here we check that this isn't the first song we're loading, and if not we slowly fade the current song out
+        /*if (currentSong != null)
+        {
+            FadeOutCurrentSong();
+        }*/
+
+        // Now that the old song is safely fading away, we can update the currently cached song
+        currentSong = newSong;
+
+        // Once the new song is loaded, we'll need to reload our instrument/song pairs, as the relevent instruments for each ability 
+        // will potentially change from song to song. These are specifically the instruments related to abilities - not background tracks
+        InitialiseNewSongInstruments();
+
+
+        // After initialising a song, we also want to cache any background tracks that should always be playing 
+        // =============================================================================================================================
+        // We'll start by checking if any backing track is already playing
+        if (BackgroundInstrumentIndex != -1)                                       // implies background instrument exists
+        {
+            // if one is playing, we'll fade it out nicely
+            FadeOut(musicSources[(int)MusicSourceIndex.Background], standardMusicFadeSpeed);
+        }
+
+        // We can then reinitialise this index variable before searching for a new relevent index
+        // That way, if this is still -1 at the end of the loop, we know a backing instrument wasn't found
+        BackgroundInstrumentIndex = -1;
 
         // The loop through the instruments looking for a Background Instrument
         for (int i = 0; i < newSong.songInstruments.Count; i++)
@@ -193,24 +228,31 @@ public class MusicControllerDA : MonoBehaviour
                 break;
             }
         }
-
-        // Here we check that this isn't the first song we're loading, and if not we slowly fade the current song out
-        if (currentSong != null)
-        {
-            FadeOutCurrentSong();
-        }
-
-        // Now that the old song is safely fading away, we can update the currently cached song
-        currentSong = newSong;
-
-        // Once the new song is loaded, we'll need to reload our instrument/song pairs, as the relevent instruments for each ability 
-        // will potentially change from song to song
-        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // This new index's clip will be automatically played when loading our first song section
+        // End Background Instrument Initialisation ====================================================================================
 
 
         // We can then start the first section of the new song. We want to start it with a volume of 0 - allowing it to naturally fade in (in update this happens)
         LoadSongSection(0);
         ResetSongVolume();
+    }
+
+
+    /// <summary>
+    /// Loops through all the currently equipped instruments, finds their song-instrument pai relevent to the current song, and 
+    /// initialises the new set on instruments relevent to the current song.
+    /// </summary>
+    void InitialiseNewSongInstruments()
+    {
+        // we'll look through all the potentially equipped instruments
+        for (int i = 0; i < equippedAbilitiesController.equippedAbilities.Length; i++)
+        {
+            if (equippedAbilitiesController.equippedAbilities[i] != null)      // We then check if an ability is actually equipped in that slot
+            { 
+                // ...and reinitialise it's instrument if one is present
+                EquipInstrument(equippedAbilitiesController.equippedAbilities[i]);
+            }
+        }
     }
 
 
@@ -368,22 +410,36 @@ public class MusicControllerDA : MonoBehaviour
         // =============================================================================================================
 
         // Mobility clip updating
-        musicSources[(int)MusicSourceIndex.Mobility].clip = 
-                    GetCorrectEnergyClip(currentSong.sortedNodes[mobilityInstrumentIndex, currentSongSection], MobilityLevel);
-        musicSources[(int)MusicSourceIndex.Mobility].Play();
+        if (MobilityInstrumentIndex != -1)    // We want to make sure an instrument is actually equipped for this category
+        {
+            musicSources[(int)MusicSourceIndex.Mobility].clip =
+                        GetCorrectEnergyClip(currentSong.sortedNodes[MobilityInstrumentIndex, currentSongSection], MobilityLevel);
+            musicSources[(int)MusicSourceIndex.Mobility].Play();
+        }
 
-        // Mobility clip updating
-        musicSources[(int)MusicSourceIndex.Offense].clip =
+        // Offense clip updating
+        if (OffenseInstrumentIndex != -1)    // We want to make sure an instrument is actually equipped for this category
+        {
+            musicSources[(int)MusicSourceIndex.Offense].clip =
                     GetCorrectEnergyClip(currentSong.sortedNodes[OffenseInstrumentIndex, currentSongSection], OffenseLevel);
-        musicSources[(int)MusicSourceIndex.Offense].Play();
+            musicSources[(int)MusicSourceIndex.Offense].Play();
+        }
 
-       // Mobility clip updating
-       musicSources[(int)MusicSourceIndex.Defense].clip =
+
+        // Defense clip updating
+        if (DefenseInstrumentIndex != -1)    // We want to make sure an instrument is actually equipped for this category
+        {
+            musicSources[(int)MusicSourceIndex.Defense].clip =
                     GetCorrectEnergyClip(currentSong.sortedNodes[DefenseInstrumentIndex, currentSongSection], DefenseLevel);
-        musicSources[(int)MusicSourceIndex.Defense].Play();
+            musicSources[(int)MusicSourceIndex.Defense].Play();
+        }
 
-        musicSources[(int)MusicSourceIndex.Background].clip = currentSong.sortedNodes[DefenseInstrumentIndex, currentSongSection].lowClip;
-        musicSources[(int)MusicSourceIndex.Background].Play();
+        if (BackgroundInstrumentIndex != -1)
+        {
+            // Note that the background will only have one clip level (I assume), hence we just load the low clip
+            musicSources[(int)MusicSourceIndex.Background].clip = currentSong.sortedNodes[BackgroundInstrumentIndex, currentSongSection].lowClip;
+            musicSources[(int)MusicSourceIndex.Background].Play();
+        }
         // =============================================================================================================
 
     }
@@ -466,7 +522,7 @@ public class MusicControllerDA : MonoBehaviour
                 }
             }
         }
-        else                                                                          // if one wasn't found, we throw an error and allow the instrument index to get set to -1
+        else                                                                            // if one wasn't found, we throw an error and allow the instrument index to get set to -1
         {
             Debug.LogWarning("Ability " + newAbility.name + " has no instrument assigned for the " + currentSong.name + " song." );
         }
@@ -479,19 +535,19 @@ public class MusicControllerDA : MonoBehaviour
             case Ability.AbilityCategory.Mobility:
 
                 FadeOut(musicSources[(int)MusicSourceIndex.Mobility], standardMusicFadeSpeed);  // Creates a temporary object that will gently fade this instrument away
-                mobilityInstrumentIndex = newInstrumentIndex;                                   // Updates the current mobility instrument index
+                MobilityInstrumentIndex = newInstrumentIndex;                                   // Updates the current mobility instrument index
                 musicSources[(int)MusicSourceIndex.Mobility].volume = 0;                        // This will give an automatic fade-in effect, 
                                                                                                 // due to how volume responds to category levels in Update()
 
-                if (mobilityInstrumentIndex == -1)                                              // implies no instrument equipped/found
+                if (MobilityInstrumentIndex == -1)                                              // implies no instrument equipped/found
                 {
                     musicSources[(int)MusicSourceIndex.Mobility].Stop();
                     musicSources[(int)MusicSourceIndex.Mobility].clip = null;
                 }
                 else                                                                            // Implies there IS a new clip to play
                 {
-                    musicSources[(int)MusicSourceIndex.Mobility].clip =
-                      currentSong.sortedNodes[newInstrumentIndex, currentSongSection].lowClip;  // Assigns the new clip to the correct AudioSource
+                    musicSources[(int)MusicSourceIndex.Mobility].clip =                         // Assigns the new clip to the correct AudioSource
+                        GetCorrectEnergyClip(currentSong.sortedNodes[newInstrumentIndex, currentSongSection], MobilityLevel); 
                     musicSources[(int)MusicSourceIndex.Mobility].Play();
                 }
                 
@@ -511,8 +567,8 @@ public class MusicControllerDA : MonoBehaviour
                 }
                 else                                                                            // Implies there IS a new clip to play
                 {
-                    musicSources[(int)MusicSourceIndex.Offense].clip =
-                      currentSong.sortedNodes[newInstrumentIndex, currentSongSection].lowClip;  // Assigns the new clip to the correct AudioSource
+                    musicSources[(int)MusicSourceIndex.Offense].clip =                          // Assigns the new clip to the correct AudioSource
+                        GetCorrectEnergyClip(currentSong.sortedNodes[newInstrumentIndex, currentSongSection], OffenseLevel);
                     musicSources[(int)MusicSourceIndex.Offense].Play();
                 }
 
@@ -532,8 +588,8 @@ public class MusicControllerDA : MonoBehaviour
                 }
                 else                                                                            // Implies there IS a new clip to play
                 {
-                    musicSources[(int)MusicSourceIndex.Defense].clip =
-                      currentSong.sortedNodes[newInstrumentIndex, currentSongSection].lowClip;  // Assigns the new clip to the correct AudioSource
+                    musicSources[(int)MusicSourceIndex.Defense].clip =                          // Assigns the new clip to the correct AudioSource
+                        GetCorrectEnergyClip(currentSong.sortedNodes[newInstrumentIndex, currentSongSection], DefenseLevel);
                     musicSources[(int)MusicSourceIndex.Defense].Play();
                 }
 
@@ -563,10 +619,6 @@ public class MusicControllerDA : MonoBehaviour
     {
 
     }
-
-
-
-
 
 
     /// <summary>

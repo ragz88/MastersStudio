@@ -52,7 +52,7 @@ public class Ability : ScriptableObject
     public struct InstrumentSongPair
     {
         public Song specificSong;                    
-        public Instrument abilityInstrument;       // The Instrument this ability would activate in the song specified
+        public Instrument abilityInstrument;                             // The Instrument this ability would activate in the song specified
     }
 
     // An array of the specific instrument this ability would activate in each specific song

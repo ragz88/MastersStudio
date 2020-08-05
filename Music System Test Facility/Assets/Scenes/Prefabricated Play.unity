@@ -351,6 +351,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4809e9ce2b5c114ab0cc51f41bb9c97, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  dynamicMusicVolume: 10
   minLevelValue: 0.25
   maxLevelValue: 2.99
   OffenseLevel: 2.99
@@ -369,6 +370,7 @@ MonoBehaviour:
   - {fileID: 1009833235}
   - {fileID: 1675969473}
   - {fileID: 869702036}
+  MusicMasterMixer: {fileID: 0}
   tempFadeOutSource: {fileID: 8310328401277108164, guid: 60bb7482ad66f4844b9c5c3665cdcf03,
     type: 3}
   currentSong: {fileID: 11400000, guid: 7c0db26f1f77b5f46a470000ed3d8df6, type: 2}
