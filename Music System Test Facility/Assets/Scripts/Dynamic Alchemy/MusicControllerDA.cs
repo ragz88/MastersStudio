@@ -2,33 +2,53 @@
 using System.Collections.Generic;
 using UnityEngine.Audio;
 using UnityEngine;
+using System.Transactions;
 
 public class MusicControllerDA : MonoBehaviour
 {
     public float dynamicMusicVolume = 0;
     
-    public float minLevelValue = 0.25f;     // Minimum value any of the categories can ever sink to.
-    public float maxLevelValue = 2.99f;     // Maximum value any of the categories can ever rise to.
-    
+    public float minLevelValue = 0.25f;                // Minimum value any of the categories can ever sink to.
+    public float maxLevelValue = 2.99f;                // Maximum value any of the categories can ever rise to.
+    public float categoryMax = 2f;                     // The value at which a category will hit max energy and volume.
+    public const float standardMusicFadeSpeed = 2f;    // Speed at which songs/clips fade out and fade in
+    public const float standardVolumeMorphSpeed = 2f;  // Speed at which volume changes in response to changing player energy
+
+
+    [Header("Current Category Energy Levels")]
+
+    [SerializeField][Range(0.25f, 2.99f)]
+    private float MobilityLevel = 1;        // Increases each time player jumps/dashes/slides etc. ().
+
     [SerializeField][Range(0.25f, 2.99f)]
     private float OffenseLevel = 1;         // Increases each time player lands a hit/shot/deals damage ().
 
     [SerializeField][Range(0.25f, 2.99f)]
     private float DefenseLevel = 1;         // Increases each time player blocks/evades/parries a hit ().
 
-    [SerializeField][Range(0.25f, 2.99f)]
-    private float MobilityLevel = 1;        // Increases each time player jumps/dashes/slides etc. ().
+    
 
-    public float categoryMax = 2f;          // Max amount a category can be
+    [Header("Thresholds and Ratios")]
     public float medClipThreshold = 1;      // The point at which the low clip of a node will stop playing, and the medium one will start playing
     public float highClipThreshold = 3;     // The point at which the med clip of a node will stop playing, and the high one will start playing  -- For this testing ground, this is still out of the possible range
-    
+
+    public float lowClipMin   = 0.0f;       // The volume (percent) that a source should use when at the lowest energy level.
+    public float lowClipMax   = 0.4f;       // The max volume a lowEnergy clip will play at. 
+    public float medClipMin   = 0.5f;       // The minimum volume a Medium Energy clip will play at.
+    public float medClipMax  = 0.85f;       // The max volume a Medium Energy clip will play at.
+    public float highClipMin = 0.97f;       // The minimum volume a High Energy clip will play at.
+    public float highClipMax    = 1f;       // The max volume a High Energy clip will play at.
+
+    private float mobilityVolume = 0;       // The mobility dynamic music sources will lerp their volumes to this value smoothly
+    private float offenseVolume  = 0;       // The offense dynamic music sources will lerp their volumes to this value smoothly
+    private float defenseVolume  = 0;       // The defense dynamic music sources will lerp their volumes to this value smoothly
+
+
     private float playstyleEnergy = 0;      // Sum of all three energy levels, each with a max value of categoryMax
                                             // Note that the 0.99 buffer is just for timing purposes - the value used for logic will never be higher that 
                                             // categoryMax
 
-    public const float standardMusicFadeSpeed = 2f;    // Speed at which songs/clips fade out and fade in  
-
+    [Header("Audio Sources and Components")]
     // Stores a reference to each AudioSource used to play music and the temp AudioSources used for transitioning between musical states.
     // The order these sources are assigned with is specific, and represented below.
     // I considered making a struct and storing each with an accompanying name, but this was more efficient in the long run (that requires looping through the array).
@@ -53,6 +73,8 @@ public class MusicControllerDA : MonoBehaviour
 
     public GameObject tempFadeOutSource;     // A special prefab that plays a sound with constantly decreasing volume until it deletes itself.
 
+
+    [Header("Custom Storage Objects")]
 
     public Song currentSong;                 // The current song in this area (collection of MusicNodes)
     int currentSongSection = 0;              // Stores the index of the current song section in the 2D sortedNode array
@@ -117,9 +139,6 @@ public class MusicControllerDA : MonoBehaviour
         MusicMasterMixer.GetFloat("DynamicMusicVolume", out dynamicMusicVolume);
 
         LoadNewSong(currentSong);
-
-        // currentSong.InitialiseSong();
-        // currentSong.LogArrayToConsole();
     }
 
     // Update is called once per frame
@@ -158,16 +177,20 @@ public class MusicControllerDA : MonoBehaviour
 
         #endregion
 
+        // We check if the current section is done, then activate an algorithm to figure out what the next section should be
         if (SectionDonePlaying())
         {
             NextSongSection();
         }
 
-        //CheckLowMedHigh();   ---> AND ADJUST SOURCE VOLUME ACCORDINGLY
-
-
-
-
+        
+        // If the player chooses to here changing energy in the individual clips (Scale Overlays), then we calculate dynamic
+        // volumes and play clips based on the player's playstyle energy.
+        if (NodeLevels)
+        {
+            UpdateClipEnergies();
+        }
+        
 
         // Here, we increase current mixer's volume to the user-defined max level if it's too low =================================
         // This temporary float is used to extract and examine the current volume of our dynamic music in our music mixer
@@ -253,6 +276,123 @@ public class MusicControllerDA : MonoBehaviour
                 EquipInstrument(equippedAbilitiesController.equippedAbilities[i]);
             }
         }
+    }
+
+
+    /// <summary>
+    /// This makes sure that the dynamic audio sources are each playing the correct energy level clip from each of their associated
+    /// music nodes. It will also adjust the volume of each of these audio sources based on the current category levels.
+    /// </summary>
+    void UpdateClipEnergies()
+    {
+        // We'll Start by updating which clips are playing based on the current energy levels
+        // ================================================================================================================================
+
+        // Update Mobility Clip
+        if (MobilityInstrumentIndex != -1)    // We want to make sure an instrument is actually equipped for this category
+        {
+            musicSources[(int)MusicSourceIndex.Mobility].clip =
+            GetCorrectEnergyClip(currentSong.sortedNodes[MobilityInstrumentIndex, currentSongSection], MobilityLevel);
+        }
+
+        // Update Offense Clip
+        if (OffenseInstrumentIndex != -1)    // We want to make sure an instrument is actually equipped for this category
+        {
+            musicSources[(int)MusicSourceIndex.Offense].clip =
+            GetCorrectEnergyClip(currentSong.sortedNodes[OffenseInstrumentIndex, currentSongSection], OffenseLevel);
+        }
+
+        //Update Defense Clip
+        if (DefenseInstrumentIndex != -1)    // We want to make sure an instrument is actually equipped for this category
+        {
+            musicSources[(int)MusicSourceIndex.Defense].clip =
+            GetCorrectEnergyClip(currentSong.sortedNodes[DefenseInstrumentIndex, currentSongSection], DefenseLevel);
+        }
+        // End clip assignment ============================================================================================================
+
+
+
+        // Update the current volume values ===============================================================================================
+
+        // Update our volume variables based on their current category levels
+        mobilityVolume = GetMusicSourceVolume(MobilityLevel);
+        offenseVolume = GetMusicSourceVolume(OffenseLevel);
+        defenseVolume = GetMusicSourceVolume(DefenseLevel);
+
+        // Then lerp towards these volume levels in our actual volume settings for our audio sources
+        musicSources[(int)MusicSourceIndex.Mobility].volume =
+            Mathf.Lerp(musicSources[(int)MusicSourceIndex.Mobility].volume, mobilityVolume, standardVolumeMorphSpeed * Time.deltaTime);
+        musicSources[(int)MusicSourceIndex.Offense].volume =
+            Mathf.Lerp(musicSources[(int)MusicSourceIndex.Offense].volume, offenseVolume, standardVolumeMorphSpeed * Time.deltaTime);
+        musicSources[(int)MusicSourceIndex.Defense].volume =
+            Mathf.Lerp(musicSources[(int)MusicSourceIndex.Defense].volume, defenseVolume, standardVolumeMorphSpeed * Time.deltaTime);
+
+        // End volume assignment ==========================================================================================================
+    }
+
+
+    /// <summary>
+    /// Takes the current level of a category and converts it to a volume level that falls between the minimum and
+    /// maximum volumes of the type of clip playing (low, med or high), based on the publicly assigned values for these.
+    /// </summary>
+    /// <param name="categoryLevel">The energy level of a category to be converted to a volume value</param>
+    /// <returns>A volume value between 0 and 1</returns>
+    float GetMusicSourceVolume(float categoryLevel)
+    {
+        float newVolume = 0;  // We'll use this to temporarily store the result of our volume calculation
+
+        if (categoryLevel < medClipThreshold)                 // Low energy clip is playing
+        {
+            // We want to rescale the energy value (lying between 0 and medClipThreshold) to a volume level 
+            // (lying between lowClipMin and lowClipMax)
+            newVolume = RescaleValue(categoryLevel, 0, medClipThreshold,  lowClipMin, lowClipMax);
+        }
+        else if (categoryLevel < highClipThreshold)           // Medium energy clip is playing
+        {
+            // We want to rescale the energy value (lying between medClipThreshold and highClipThreshold) to a volume level 
+            // (lying between medClipMin and medClipMax)
+            newVolume = RescaleValue(categoryLevel, medClipThreshold, highClipThreshold, medClipMin, medClipMax);
+        }
+        else                                                  // High energy clip is playing
+        {
+            // We want to rescale the energy value (lying between HighClipThreshold and categoryMaxLevel) to a volume level 
+            // (lying between medClipMin and medClipMax)
+            newVolume = RescaleValue(categoryLevel, highClipThreshold, categoryMax, highClipMin, highClipMax); 
+        }
+
+        // Finally, we never want our volume to go higher than 100% - so we make sure the returned value is 1 or less.
+        if (newVolume > 1)
+        {
+            return 1;
+        }
+        else
+        {
+            return newVolume;
+        }
+    }
+
+
+    /// <summary>
+    /// Takes a value between a minimum and maximum and converts it to a new value that keeps the same proportional size, 
+    /// but lies between a new maximum and minimum.
+    /// </summary>
+    /// <param name="currentValue">The value lying somewhere between oldMin and oldMax</param>
+    /// <param name="oldMin">The current minimum value of currentValue's scale</param>
+    /// <param name="oldMax">The current maximum value of currentValue's scale</param>
+    /// <param name="newMin">The minimum value of the new scale the result will proportionately fall into</param>
+    /// <param name="newMax">The maximum value of the new scale the result will proportionately fall into</param>
+    /// <returns>A new value that falls between a new max and min, but is proportionately equal to the initial value given</returns>
+    float RescaleValue(float currentValue, float oldMin, float oldMax, float newMin, float newMax)
+    {
+        // First we'll convert our value to a percentage of the original scale
+        float percentageRepresentation = ((currentValue - oldMin) / (oldMax - oldMin));
+
+        // Then we'll calculate a magnitude relative to the new scale based on that percentage
+        // (Total Magnitude of New Scale) * Calculated Percentage
+        float newMagnitude = ((newMax - newMin) * percentageRepresentation);
+
+        // Finally, we add that to the new min to put it back within the bounds of our new scale
+        return (newMagnitude + newMin);
     }
 
 
