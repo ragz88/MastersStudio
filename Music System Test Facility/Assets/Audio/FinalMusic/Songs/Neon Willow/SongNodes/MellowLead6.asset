@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9ef19a707bf671a4bb3d73dc9bb6b794, type: 3}
-  m_Name: MellowLead0
+  m_Name: MellowLead6
   m_EditorClassIdentifier: 
   nodeSong: {fileID: 11400000, guid: a7e9897ef9bba864b9566c2c85b22a03, type: 2}
-  nodeSection: 0
+  nodeSection: 6
   nodeInstrument: {fileID: 11400000, guid: 17cdef20ec494614880791755350c2fb, type: 2}
   lowClip: {fileID: 0}
   medClip: {fileID: 0}

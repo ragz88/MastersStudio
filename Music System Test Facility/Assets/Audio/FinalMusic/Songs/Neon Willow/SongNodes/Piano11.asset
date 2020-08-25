@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9ef19a707bf671a4bb3d73dc9bb6b794, type: 3}
-  m_Name: MellowLead0
+  m_Name: Piano11
   m_EditorClassIdentifier: 
   nodeSong: {fileID: 11400000, guid: a7e9897ef9bba864b9566c2c85b22a03, type: 2}
-  nodeSection: 0
-  nodeInstrument: {fileID: 11400000, guid: 17cdef20ec494614880791755350c2fb, type: 2}
-  lowClip: {fileID: 0}
-  medClip: {fileID: 0}
+  nodeSection: 11
+  nodeInstrument: {fileID: 11400000, guid: 1fa0a31103f2e9d4d91d417ddeb86aea, type: 2}
+  lowClip: {fileID: 8300000, guid: 47f9b25d2759c854ea77ad545d8fd9f1, type: 3}
+  medClip: {fileID: 8300000, guid: 475cc39e524517047a7ee2d7eee761fb, type: 3}
   highClip: {fileID: 0}
