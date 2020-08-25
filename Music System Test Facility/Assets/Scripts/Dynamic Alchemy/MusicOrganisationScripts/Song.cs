@@ -72,6 +72,9 @@ public class Song : ScriptableObject
     /// </summary>
     public void InitialiseSong()
     {
+        // We ensure to remove any residule instruments from the last time we used this song
+        songInstruments = new List<Instrument>();
+
         // We start by populating our instrument list with each unique instrument from our node array.
         // We'll also examine each node to find the int representing the final section in the song (largest int)
         // These will be used to create our 2D sortedNodes array.

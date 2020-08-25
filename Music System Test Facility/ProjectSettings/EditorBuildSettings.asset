@@ -6,6 +6,27 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/Prefabricated Play.unity
+    path: Assets/Scenes/ModeSelectMenu.unity
+    guid: fc8c5cd1822997c4cbe8deb4e4c740c9
+  - enabled: 1
+    path: Assets/Scenes/Tutorial.unity
+    guid: a4b4a3d169f2e62469a0b14d539d9b83
+  - enabled: 1
+    path: Assets/Scenes/PPGame.unity
+    guid: bd3cf5866e304134ea1c8d62402a77f9
+  - enabled: 1
+    path: Assets/Scenes/DAGame.unity
+    guid: ba9cd7ccb9f45d240b100a7816f727e2
+  - enabled: 1
+    path: Assets/Scenes/Debrief.unity
+    guid: a90ecea89f521f848ab4765147769aea
+  - enabled: 1
+    path: Assets/Scenes/PPTut.unity
+    guid: 876ead639cdb56542a8a76eb53ae43f0
+  - enabled: 1
+    path: Assets/Scenes/DATut.unity
+    guid: 4f2213e50f2745d4cad9af353d70287c
+  - enabled: 1
+    path: Assets/Scenes/DynamicAlchemyTest.unity
     guid: 2cda990e2423bbf4892e6590ba056729
   m_configObjects: {}

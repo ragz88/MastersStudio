@@ -10,12 +10,6 @@ public class TempAudioFadeOut : MonoBehaviour
 
     public float fadeSpeed = 2f;                // Speed at which the new source will fade away.
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        source = GetComponent<AudioSource>();
-    }
-
     // Update is called once per frame
     void Update()
     {
@@ -36,11 +30,13 @@ public class TempAudioFadeOut : MonoBehaviour
     public void InitialiseFadeOut(AudioSource originalSource, float newFadeSpeed)
     {
         // Here we make sure all the important properties of the initial source are copied exactly to the new source
+        source = GetComponent<AudioSource>();
         source.clip = originalSource.clip;
-        source.time = originalSource.time;
+        source.time = originalSource.time;               // This may need an upgrade. If the clip ends while it's fading, we lose all value of the fade. 
         source.pitch = originalSource.pitch;
         source.volume = originalSource.volume;
         source.outputAudioMixerGroup = originalSource.outputAudioMixerGroup;
+        source.Play();
 
         fadeSpeed = newFadeSpeed;
     }

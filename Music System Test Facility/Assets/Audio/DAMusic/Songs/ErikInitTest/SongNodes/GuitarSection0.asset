@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9ef19a707bf671a4bb3d73dc9bb6b794, type: 3}
+  m_Name: GuitarSection0
+  m_EditorClassIdentifier: 
+  nodeSong: {fileID: 11400000, guid: 7c0db26f1f77b5f46a470000ed3d8df6, type: 2}
+  nodeSection: 0
+  nodeInstrument: {fileID: 11400000, guid: d6b43f10ba2c9bc428cad3679a0348a9, type: 2}
+  lowClip: {fileID: 8300000, guid: b56fc9b8a2b69fb419d3efc257e7a1f7, type: 3}
+  medClip: {fileID: 8300000, guid: a30d85ea125af084c823cec8546899a4, type: 3}
+  highClip: {fileID: 8300000, guid: b4ba2417cb7da10489987c34ce0be3f2, type: 3}
