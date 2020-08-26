@@ -134,38 +134,46 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6510e28ce0105694ebe457e0e774be63, type: 2}
   - {fileID: 11400000, guid: faaee30fcb00d484da1d8b61386a9cde, type: 2}
   - {fileID: 11400000, guid: 126cfa59ae1143147bb7845da30de0eb, type: 2}
-  finalSection: 0
+  finalSection: 14
   lowestSection: 0
-  highestSection: 0
-  songInstruments: []
+  highestSection: 11
+  songInstruments:
+  - {fileID: 11400000, guid: 9b792f7ae8eb17741b8fc5db47074918, type: 2}
+  - {fileID: 11400000, guid: 49d9fc583e4acc94fbdd502d0a5447d8, type: 2}
+  - {fileID: 11400000, guid: 28f0d21962ab06a46881114ad6bd7367, type: 2}
+  - {fileID: 11400000, guid: f726e5aab09bd5c47ae128d2ab037531, type: 2}
+  - {fileID: 11400000, guid: 17cdef20ec494614880791755350c2fb, type: 2}
+  - {fileID: 11400000, guid: 07293bee0f4948c4484341d0e45a635d, type: 2}
+  - {fileID: 11400000, guid: 1fa0a31103f2e9d4d91d417ddeb86aea, type: 2}
+  - {fileID: 11400000, guid: a9868347c8ff84644a974833c84b95dc, type: 2}
   sectionDetails:
   - songSectionEnergy: 0
-    forwardLinks: 
-  - songSectionEnergy: 0
-    forwardLinks: 
-  - songSectionEnergy: 0
-    forwardLinks: 
-  - songSectionEnergy: 0
-    forwardLinks: 
-  - songSectionEnergy: 0
-    forwardLinks: 
-  - songSectionEnergy: 0
-    forwardLinks: 
-  - songSectionEnergy: 0
-    forwardLinks: 
-  - songSectionEnergy: 0
-    forwardLinks: 
-  - songSectionEnergy: 0
-    forwardLinks: 
-  - songSectionEnergy: 0
-    forwardLinks: 
-  - songSectionEnergy: 0
-    forwardLinks: 
-  - songSectionEnergy: 0
-    forwardLinks: 
-  - songSectionEnergy: 0
-    forwardLinks: 
-  - songSectionEnergy: 0
-    forwardLinks: 
+    forwardLinks: 01000000
+  - songSectionEnergy: 1
+    forwardLinks: 020000000500000008000000
+  - songSectionEnergy: 0.5
+    forwardLinks: 030000000500000008000000
+  - songSectionEnergy: 3
+    forwardLinks: 05000000080000000400000006000000070000000c0000000d000000
+  - songSectionEnergy: 3.5
+    forwardLinks: 0500000008000000
+  - songSectionEnergy: 2
+    forwardLinks: 030000000400000006000000070000000c0000000d000000
+  - songSectionEnergy: 3.51
+    forwardLinks: 03000000040000000500000007000000080000000c0000000d000000
+  - songSectionEnergy: 3.01
+    forwardLinks: 03000000040000000500000006000000080000000c0000000d000000
+  - songSectionEnergy: 1
+    forwardLinks: 03000000040000000600000007000000090000000c0000000d000000
+  - songSectionEnergy: 1.5
+    forwardLinks: 0a000000
+  - songSectionEnergy: 1
+    forwardLinks: 0b000000
+  - songSectionEnergy: 4.99
+    forwardLinks: 0300000004000000050000000600000007000000080000000c0000000d000000
+  - songSectionEnergy: 3.02
+    forwardLinks: 0300000004000000050000000600000007000000080000000d000000
+  - songSectionEnergy: 4.5
+    forwardLinks: 0300000004000000050000000600000007000000080000000c000000
   - songSectionEnergy: 0
     forwardLinks: 

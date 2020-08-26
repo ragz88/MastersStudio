@@ -1230,7 +1230,7 @@ MonoBehaviour:
   MusicMasterMixer: {fileID: 24100000, guid: 9ad666708d3005046beb57baacae01f8, type: 2}
   tempFadeOutSource: {fileID: 8310328401277108164, guid: 60bb7482ad66f4844b9c5c3665cdcf03,
     type: 3}
-  currentSong: {fileID: 11400000, guid: 7c0db26f1f77b5f46a470000ed3d8df6, type: 2}
+  currentSong: {fileID: 11400000, guid: a7e9897ef9bba864b9566c2c85b22a03, type: 2}
   backgroundInstrument: {fileID: 11400000, guid: 07293bee0f4948c4484341d0e45a635d,
     type: 2}
   equippedAbilitiesController: {fileID: 305930008}
