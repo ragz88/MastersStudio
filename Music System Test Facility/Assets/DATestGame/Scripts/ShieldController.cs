@@ -79,6 +79,9 @@ public class ShieldController : MonoBehaviour
                     {
                         // So we give a huge bonus to defense level
                         MusicControllerDA.musicControllerInstance.AdjustDefenseLevel(playerController.shieldSavedPlayer);
+
+                        // We also want to set the speed at which category levels decay back to a minimum
+                        MusicControllerDA.musicControllerInstance.ResetRateOfDecay();
                     }
                 }
                 else
@@ -87,6 +90,9 @@ public class ShieldController : MonoBehaviour
                     {
                         // Otherwise, we still give a moderate bonus for killing an enemy with the shield
                         MusicControllerDA.musicControllerInstance.AdjustDefenseLevel(playerController.shieldBlockedEnemy);
+
+                        // We also want to set the speed at which category levels decay back to a minimum
+                        MusicControllerDA.musicControllerInstance.ResetRateOfDecay();
                     }
                 }
 

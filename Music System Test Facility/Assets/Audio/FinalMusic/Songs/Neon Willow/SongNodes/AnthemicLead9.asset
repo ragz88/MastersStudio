@@ -15,6 +15,6 @@ MonoBehaviour:
   nodeSong: {fileID: 11400000, guid: a7e9897ef9bba864b9566c2c85b22a03, type: 2}
   nodeSection: 9
   nodeInstrument: {fileID: 11400000, guid: 9b792f7ae8eb17741b8fc5db47074918, type: 2}
-  lowClip: {fileID: 0}
-  medClip: {fileID: 0}
+  lowClip: {fileID: 8300000, guid: 6a345e9ead6c59b4c918e84afc096730, type: 3}
+  medClip: {fileID: 8300000, guid: 52494a32450fb404f8f0d78346bdfca9, type: 3}
   highClip: {fileID: 0}

@@ -74,21 +74,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ece5731752c047140990a39ec8580ec7, type: 2}
   - {fileID: 11400000, guid: 0b2dc6772966d2447a5f80424db2424a, type: 2}
   - {fileID: 11400000, guid: 05c671c558e8e964fae15a706017594e, type: 2}
-  - {fileID: 11400000, guid: e00ecd824c083bb428dbbd32621d4df8, type: 2}
-  - {fileID: 11400000, guid: 93a69437783a9e64288685de024b7166, type: 2}
-  - {fileID: 11400000, guid: 94774862034626c4db36b2bcf00523c7, type: 2}
-  - {fileID: 11400000, guid: 7d60a526101ba0f46a34899c55c76fab, type: 2}
-  - {fileID: 11400000, guid: ef718bdaf7744b940bd44f5732716129, type: 2}
-  - {fileID: 11400000, guid: f91e7215730d95c4e923cc61ae467d8f, type: 2}
-  - {fileID: 11400000, guid: cb75acd094573d84abf711d6f5cb0b47, type: 2}
-  - {fileID: 11400000, guid: f22dac8b48752c7428076c0d62c80bf3, type: 2}
-  - {fileID: 11400000, guid: df2952a67ebd2e14f8c024454873a0ea, type: 2}
-  - {fileID: 11400000, guid: 026ee497924cb514b8df4f6a5b33e8f5, type: 2}
-  - {fileID: 11400000, guid: 9d5d4bf7843a5a4408b16653948d7f9d, type: 2}
-  - {fileID: 11400000, guid: a761ba4164cf79241ba77d45732bb883, type: 2}
-  - {fileID: 11400000, guid: 39220c8443533b0449f689479ae9c241, type: 2}
-  - {fileID: 11400000, guid: e7e177d124204df45b75089c366920cf, type: 2}
-  - {fileID: 11400000, guid: 9e7d9e75073adc54abcb08970bd41e2f, type: 2}
   - {fileID: 11400000, guid: 9690ace6a8565074ca410a116c8c1aa8, type: 2}
   - {fileID: 11400000, guid: 85a8610d7239ef8428a0105f4eb392c2, type: 2}
   - {fileID: 11400000, guid: fae5ca03795071d439640abe9ecc1b09, type: 2}
@@ -142,7 +127,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 49d9fc583e4acc94fbdd502d0a5447d8, type: 2}
   - {fileID: 11400000, guid: 28f0d21962ab06a46881114ad6bd7367, type: 2}
   - {fileID: 11400000, guid: f726e5aab09bd5c47ae128d2ab037531, type: 2}
-  - {fileID: 11400000, guid: 17cdef20ec494614880791755350c2fb, type: 2}
   - {fileID: 11400000, guid: 07293bee0f4948c4484341d0e45a635d, type: 2}
   - {fileID: 11400000, guid: 1fa0a31103f2e9d4d91d417ddeb86aea, type: 2}
   - {fileID: 11400000, guid: a9868347c8ff84644a974833c84b95dc, type: 2}
@@ -150,7 +134,7 @@ MonoBehaviour:
   - songSectionEnergy: 0
     forwardLinks: 01000000
   - songSectionEnergy: 1
-    forwardLinks: 020000000500000008000000
+    forwardLinks: 02000000
   - songSectionEnergy: 0.5
     forwardLinks: 030000000500000008000000
   - songSectionEnergy: 3

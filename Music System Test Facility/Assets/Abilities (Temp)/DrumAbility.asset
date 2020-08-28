@@ -23,3 +23,6 @@ MonoBehaviour:
   - specificSong: {fileID: 11400000, guid: 7c0db26f1f77b5f46a470000ed3d8df6, type: 2}
     abilityInstrument: {fileID: 11400000, guid: f726e5aab09bd5c47ae128d2ab037531,
       type: 2}
+  - specificSong: {fileID: 11400000, guid: a7e9897ef9bba864b9566c2c85b22a03, type: 2}
+    abilityInstrument: {fileID: 11400000, guid: f726e5aab09bd5c47ae128d2ab037531,
+      type: 2}

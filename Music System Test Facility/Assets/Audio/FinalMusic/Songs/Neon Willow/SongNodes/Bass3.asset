@@ -16,5 +16,5 @@ MonoBehaviour:
   nodeSection: 3
   nodeInstrument: {fileID: 11400000, guid: 28f0d21962ab06a46881114ad6bd7367, type: 2}
   lowClip: {fileID: 8300000, guid: 27cb688810fa1a94e907e3c91033152a, type: 3}
-  medClip: {fileID: 0}
+  medClip: {fileID: 8300000, guid: 27cb688810fa1a94e907e3c91033152a, type: 3}
   highClip: {fileID: 0}

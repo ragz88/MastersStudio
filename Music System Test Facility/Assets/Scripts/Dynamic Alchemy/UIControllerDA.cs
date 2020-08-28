@@ -20,6 +20,7 @@ public class UIControllerDA : MonoBehaviour
     [Header("Text Objects")]
     public Text currentTotalEnergy;
     public Text currentSectionEnergy;
+    public Text currentDecayRate;
     public Text mediumThreshold;
     public Text highThreshold;
 
@@ -30,10 +31,12 @@ public class UIControllerDA : MonoBehaviour
     public Text mobilityVol;
     public Text offenseVol;
     public Text defenseVol;
+    public Text backgroundVol;
 
     public Text mobilityClip;
     public Text offenseClip;
     public Text defenseClip;
+    public Text backgroundClip;
 
     public int debriefSceneIndex = 4;
 
@@ -49,26 +52,29 @@ public class UIControllerDA : MonoBehaviour
         if (statsContainer.activeSelf)
         {
             // Represent some general information through text
-            currentTotalEnergy.text = "Current Playstyle Enegy: " + MusicControllerDA.musicControllerInstance.GetPlaystyleEnergy().ToString();
+            currentTotalEnergy.text = "Current Playstyle Enegy: " + System.Math.Round(MusicControllerDA.musicControllerInstance.GetPlaystyleEnergy(), 2).ToString();
             currentSectionEnergy.text = "Current Section Enegy: " + MusicControllerDA.musicControllerInstance.GetCurrentSectionEnergy().ToString();
+            currentDecayRate.text = "Current Rate of Decay: " + System.Math.Round(MusicControllerDA.musicControllerInstance.GetCurrentRateOfDecay(), 2).ToString();
             mediumThreshold.text = "Medium Threshold: " + MusicControllerDA.musicControllerInstance.medClipThreshold.ToString();
             highThreshold.text = "High Threshold: " + MusicControllerDA.musicControllerInstance.highClipThreshold.ToString();
 
             // Each specific category's energy level is represented through text
-            mobilityValue.text = "Mobility: " + MusicControllerDA.musicControllerInstance.GetMobilityLevel().ToString();
-            offenseValue.text  = "Offense: "  + MusicControllerDA.musicControllerInstance.GetOffenseLevel().ToString();
-            defenseValue.text  = "Defense: "  + MusicControllerDA.musicControllerInstance.GetDefenseLevel().ToString();
+            mobilityValue.text = "Mobility: " + System.Math.Round(MusicControllerDA.musicControllerInstance.GetMobilityLevel(), 2).ToString();
+            offenseValue.text  = "Offense: "  + System.Math.Round(MusicControllerDA.musicControllerInstance.GetOffenseLevel(), 2).ToString();
+            defenseValue.text  = "Defense: "  + System.Math.Round(MusicControllerDA.musicControllerInstance.GetDefenseLevel(), 2).ToString();
 
             // The calculated volume (which will be lerped to) of each category is represented through text
-            mobilityVol.text = "Vol: " + MusicControllerDA.musicControllerInstance.GetMobilityVolume().ToString();
-            offenseVol.text  = "Vol: " + MusicControllerDA.musicControllerInstance.GetOffenseVolume().ToString();
-            defenseVol.text  = "Vol: " + MusicControllerDA.musicControllerInstance.GetDefenseVolume().ToString();
+            mobilityVol.text   = "Vol: " + System.Math.Round(MusicControllerDA.musicControllerInstance.GetMobilityVolume(), 2).ToString();
+            offenseVol.text    = "Vol: " + System.Math.Round(MusicControllerDA.musicControllerInstance.GetOffenseVolume(), 2).ToString();
+            defenseVol.text    = "Vol: " + System.Math.Round(MusicControllerDA.musicControllerInstance.GetDefenseVolume(), 2).ToString();
+            backgroundVol.text = "Vol: " + System.Math.Round(MusicControllerDA.musicControllerInstance.GetBackgroundVolume(), 2).ToString();
 
             // We cache a reference to each of the categories main audio sources' clips
             AudioClip mobClip = MusicControllerDA.musicControllerInstance.musicSources[(int)MusicControllerDA.MusicSourceIndex.Mobility].clip;
             AudioClip offClip = MusicControllerDA.musicControllerInstance.musicSources[(int)MusicControllerDA.MusicSourceIndex.Offense].clip;
             AudioClip defClip = MusicControllerDA.musicControllerInstance.musicSources[(int)MusicControllerDA.MusicSourceIndex.Defense].clip;
-
+            AudioClip backClip = MusicControllerDA.musicControllerInstance.musicSources[(int)MusicControllerDA.MusicSourceIndex.Background].clip;
+            
             // ... to check if there is currently a clip equipped, and (if so) extract and display its name through text.
             // Get Mobility clip's name
             if (mobClip != null)
@@ -98,6 +104,16 @@ public class UIControllerDA : MonoBehaviour
             else
             {
                 defenseClip.text = "Clip: None";
+            }
+
+            // Get Defense clip's name
+            if (backClip != null)
+            {
+                backgroundClip.text = "Clip: " + backClip.name;
+            }
+            else
+            {
+                backgroundClip.text = "Clip: None";
             }
         }
 

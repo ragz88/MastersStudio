@@ -79,6 +79,9 @@ public class EnemyController : MonoBehaviour
                     {
                         // And give them some extra points in mobility for doing so
                         MusicControllerDA.musicControllerInstance.AdjustMobilityLevel(playerController.dashingAwayFromEnemy);
+
+                        // We also want to set the speed at which category levels decay back to a minimum
+                        MusicControllerDA.musicControllerInstance.ResetRateOfDecay();
                     }
                 }
 
@@ -95,31 +98,41 @@ public class EnemyController : MonoBehaviour
         if (collision.gameObject.CompareTag("Bullet"))
         {
             DAGameManager.GameManagerInstance.score++;   // Increase the score
-            playerController.killCount++;                // We increase our combo kill counter
-            playerController.killTimer = 0;              // And reset our timer that checks the interval between kills
-            enemyCollisions = 0;                         // As well as reset our counter for enemies killing eachother
 
-            // If the player has successfully completed the hattrick, we give them a bonus and spawn some feedback particles
-            if (playerController.killCount >= 3)
+            if (playerController != null)
             {
-                // reset the killcount for the next hattrick
-                playerController.killCount = 0;
+                playerController.killCount++;                // We increase our combo kill counter
+                playerController.killTimer = 0;              // And reset our timer that checks the interval between kills
+                enemyCollisions = 0;                         // As well as reset our counter for enemies killing eachother
 
-                // spawn some dope particles for feedback
-                playerController.SpawnKillComboParticles();
-                Instantiate(tripleDeathParticles, transform.position, Quaternion.identity);
-
-                if (!playerController.simulatePrefabPlay)
+                // If the player has successfully completed the hattrick, we give them a bonus and spawn some feedback particles
+                if (playerController.killCount >= 3)
                 {
-                    // award a larger point score
-                    MusicControllerDA.musicControllerInstance.AdjustOffenseLevel(playerController.tripleKill);
+                    // reset the killcount for the next hattrick
+                    playerController.killCount = 0;
+
+                    // spawn some dope particles for feedback
+                    playerController.SpawnKillComboParticles();
+                    Instantiate(tripleDeathParticles, transform.position, Quaternion.identity);
+
+                    if (!playerController.simulatePrefabPlay)
+                    {
+                        // award a larger point score
+                        MusicControllerDA.musicControllerInstance.AdjustOffenseLevel(playerController.tripleKill);
+
+                        // We also want to set the speed at which category levels decay back to a minimum
+                        MusicControllerDA.musicControllerInstance.ResetRateOfDecay();
+                    }
                 }
-            }
-            else  // Implies just a standard kill
-            {
-                if (!playerController.simulatePrefabPlay)
+                else  // Implies just a standard kill
                 {
-                    MusicControllerDA.musicControllerInstance.AdjustOffenseLevel(playerController.shotEnemy);
+                    if (!playerController.simulatePrefabPlay)
+                    {
+                        MusicControllerDA.musicControllerInstance.AdjustOffenseLevel(playerController.shotEnemy);
+
+                        // We also want to set the speed at which category levels decay back to a minimum
+                        MusicControllerDA.musicControllerInstance.ResetRateOfDecay();
+                    }
                 }
             }
         }

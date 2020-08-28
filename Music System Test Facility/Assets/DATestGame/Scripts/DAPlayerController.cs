@@ -197,6 +197,9 @@ public class DAPlayerController : MonoBehaviour
                         {
                             // Add a small participation prize to mobility
                             MusicControllerDA.musicControllerInstance.AdjustMobilityLevel(dashingPlain);
+
+                            // We also want to set the speed at which category levels decay back to a minimum
+                            MusicControllerDA.musicControllerInstance.ResetRateOfDecay();
                         }
                     }
 
@@ -271,7 +274,7 @@ public class DAPlayerController : MonoBehaviour
                     shootBar.color = new Color(shootBar.color.r, shootBar.color.g, shootBar.color.b, 0.4f);
 
                     // Set the offense music level to High
-                    MusicControllerDA.musicControllerInstance.SetOffenseLevel(lowEnergy);
+                    MusicControllerDA.musicControllerInstance.SetOffenseLevel(highEnergy);
 
                     GameObject shotObj = Instantiate(powerBulletPrefab, transform.position, transform.rotation) as GameObject;
                     shotObj.GetComponent<BulletMotion>().playerController = this;
@@ -470,6 +473,9 @@ public class DAPlayerController : MonoBehaviour
                 {
                     // and then adjust our mobility level
                     MusicControllerDA.musicControllerInstance.AdjustMobilityLevel(dashingThroughEnemy);
+
+                    // We also want to set the speed at which category levels decay back to a minimum
+                    MusicControllerDA.musicControllerInstance.ResetRateOfDecay();
                 }
             }
 

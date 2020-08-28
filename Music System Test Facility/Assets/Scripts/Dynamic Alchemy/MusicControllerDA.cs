@@ -3,18 +3,32 @@ using System.Collections.Generic;
 using UnityEngine.Audio;
 using UnityEngine;
 using System.Transactions;
+using System.Runtime.InteropServices.ComTypes;
 
 public class MusicControllerDA : MonoBehaviour
 {
-    public float dynamicMusicVolume = 0;
-    
+    private float dynamicMusicVolume   = 0;            // The volume our Dynamic Music Mixer will lerp towards
+    public float minDynamicMusicVolume = -16;          // The minimum volume our Dynamic Music Mixer will go to (when not fading out a song)
+    public float maxDynamicMusicVolume = -10;          // The Maximum volume our Dynamic Music Mixer will go to
+    const float dynamicMusicAccuracyBuffer = 0.2f;     // When lerping the Mixer volume to the value above, we only need to
+                                                       // get relatively close to the calculated value. This buffer is how accurate we 
+                                                       // want the actual mixer value to be.
+
     public float minLevelValue = 0.25f;                // Minimum value any of the categories can ever sink to.
     public float maxLevelValue = 2.99f;                // Maximum value any of the categories can ever rise to.
     public float categoryMax = 2f;                     // The value at which a category will hit max energy and volume.
     public float standardMusicFadeSpeed = 0.2f;        // Speed at which songs/clips fade out and fade in
     public float standardVolumeMorphSpeed = 0.2f;      // Speed at which volume changes in response to changing player energy
 
-    public float decayRate = 0.5f;                     // The rate at which each category level decays when not in use
+
+    // Note that the decay rate will become faster the longer abilities have not been used
+    public float maxDecayRate = 0.075f;                // The maximum rate at which each category level decays when not in use
+    public float minDecayRate = 0.075f;                // The minimum rate at which each category level decays when not in use
+    public float decayAcceleration = 0.02f;            // How fast the decay rate speeds up when no ability is being used
+    public float apexDecayDelay = 1f;                  // When the decay rate reaches its minimum, there's a short delay before it starts speeding up again
+    private float decayDelayTimer = 0;                 // Used to track how long the decay rate has been at its minimum
+    private float currentDecayRate;                    // This keeps track of the current rate at which category levels decay.
+                                                       // It will always lie between maxDecayRate and minDecayRate
 
 
     [Header("Current Category Energy Levels")]
@@ -33,10 +47,25 @@ public class MusicControllerDA : MonoBehaviour
     [Header("Thresholds and Ratios")]
     public float medClipThreshold = 1.3f;     // The point at which the low clip of a node will stop playing, and the medium one will start playing
     public float highClipThreshold = 3;       // The point at which the med clip of a node will stop playing, and the high one will start playing  -- For this testing ground, this is still out of the possible range
+    
     // Note - this is modelled around a schmitt trigger. I.e. there is a small amount of wiggle room in which the clip won't immediately
     // switch back to it's original state - to smooth out the experience overall.
     public float medLowerThreshold = 0.95f;   // The point at which the med clip of a node will stop playing, and the low one will start playing
     public float highLowerThreshold = 2.7f;   // The point at which the med clip of a node will stop playing, and the low one will start playing
+
+
+
+    // These thresholds are specifically for the background clips - allowing a more dynamic range of clip volumes overall.
+    // They are based on total play energy, rather than individual section energy.
+    public float medBGClipThreshold = 2.25f;  // The point at which the low clip of a node will stop playing, and the medium one will start playing
+    public float highBGClipThreshold = 9.1f;  // The point at which the med clip of a node will stop playing, and the high one will start playing  -- For this testing ground, this is still out of the possible range
+    
+    // Note - this is modelled around a schmitt trigger. I.e. there is a small amount of wiggle room in which the clip won't immediately
+    // switch back to it's original state - to smooth out the experience overall.
+    public float medLowerBGThreshold = 2f;    // The point at which the med clip of a node will stop playing, and the low one will start playing
+    public float highLowerBGThreshold = 9f;   // The point at which the med clip of a node will stop playing, and the low one will start playing
+
+
 
     public float lowClipMin   = 0.0f;         // The volume (percent) that a source should use when at the lowest energy level.
     public float lowClipMax   = 0.4f;         // The max volume a lowEnergy clip will play at. 
@@ -48,6 +77,8 @@ public class MusicControllerDA : MonoBehaviour
     private float mobilityVolume = 0;         // The mobility dynamic music sources will lerp their volumes to this value smoothly
     private float offenseVolume  = 0;         // The offense dynamic music sources will lerp their volumes to this value smoothly
     private float defenseVolume  = 0;         // The defense dynamic music sources will lerp their volumes to this value smoothly
+
+    private float backgroundVolume = 0;       // The background music source will lerp its volume to this value smoothly
 
 
     private float playstyleEnergy = 0;        // Sum of all three energy levels, each with a max value of categoryMax
@@ -93,15 +124,17 @@ public class MusicControllerDA : MonoBehaviour
     int OffenseInstrumentIndex  = -1;          // The index of the player's offense ability's inherent instrument within the song's 2D sortedNodes array.
     int DefenseInstrumentIndex  = -1;          // The index of the player's defense ability's inherent instrument within the song's 2D sortedNodes array.
     int BackgroundInstrumentIndex = -1;        // The index of the background clips within the song's 2D sortedNodes array.
+    int SecBackgroundInstrumentIndex = -1;     // The index of the secondary background clips within the song's 2D sortedNodes array (these are optional).
 
 
     public Instrument backgroundInstrument;
+    public Instrument secondaryBackgroundInstrument;
 
     // Used to access the list of currently equipped abilities and find instrument-song pairs when a song changes
     public EquippedAbilitiesController equippedAbilitiesController;
 
     // These are specifically for playtesting now - TO BE REMOVED ONCE WE DECIDE WHAT WE LIKE
-    #region Playtesting Bools
+    #region Playtesting Settings
     [HideInInspector]
     public bool SectionControl = true;    // Whether or not sections should change based on their energy in relation to the gampley
 
@@ -109,6 +142,9 @@ public class MusicControllerDA : MonoBehaviour
     public bool NodeLevels = true;        // Whether or not nodes should change between their low, med and high clips, or just use a default clip
 
     public bool simulatePrefabricatedPlay = false;  // Whether we want this to act like a Dynamic Alchemy System, or PP system
+
+    int numberOfAbilityCategories = 3;    // The number of categories used for the music calculations
+
     #endregion
 
 
@@ -142,8 +178,11 @@ public class MusicControllerDA : MonoBehaviour
         // We don't want our music to stop when jumping across scenes - we'll smoothly transition it
         DontDestroyOnLoad(gameObject);
 
-        //We want to get the current mixer setting for volume - later we'll get this value from a PlayerPrefs file
-        MusicMasterMixer.GetFloat("DynamicMusicVolume", out dynamicMusicVolume);
+        // We want to start the song low and increase volume as playstyle evolves
+        dynamicMusicVolume = minDynamicMusicVolume;
+
+        // We'll start our decay rate off slowly
+        currentDecayRate = minDecayRate;
 
         LoadNewSong(currentSong);
     }
@@ -151,7 +190,7 @@ public class MusicControllerDA : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        Debug.Log("Current section: " + currentSongSection);
         #region Temporary Testing Controls
         /*
         // ----------------------------------------------
@@ -189,12 +228,27 @@ public class MusicControllerDA : MonoBehaviour
 
         if (!simulatePrefabricatedPlay)
         {
+            // Before adjusting our category levels, we want to update the decay rate
+            // This rate will increase over time when no ability resets it to its minimum
+            // There is a delay of apexDecayDelay before it starts increasing
+            if (decayDelayTimer >= apexDecayDelay)
+            {
+                currentDecayRate = Mathf.MoveTowards(currentDecayRate, maxDecayRate, decayAcceleration * Time.deltaTime);
+            }
+            else
+            {
+                decayDelayTimer += Time.deltaTime;
+            }
+            
+
             // We want each of our categories to decay naturally over time
-            AdjustMobilityLevel(-decayRate * Time.deltaTime);
-            AdjustOffenseLevel(-decayRate * Time.deltaTime);
-            AdjustDefenseLevel(-decayRate * Time.deltaTime);
+            AdjustMobilityLevel(-currentDecayRate * Time.deltaTime);
+            AdjustOffenseLevel(-currentDecayRate * Time.deltaTime);
+            AdjustDefenseLevel(-currentDecayRate * Time.deltaTime);
         }
 
+
+        UpdatePlaystyleEnergy();              // Calculate a new total energy reflecting the player's playstyle
 
         // We check if the current section is done, then activate an algorithm to figure out what the next section should be
         if (SectionDonePlaying())
@@ -211,15 +265,21 @@ public class MusicControllerDA : MonoBehaviour
         }
         
 
-        // Here, we increase current mixer's volume to the user-defined max level if it's too low =================================
-        // This temporary float is used to extract and examine the current volume of our dynamic music in our music mixer
+        // Here, we increase current mixer's volume to the calculated max level if it's too low =================================
+
+        // Using this in conjunction with individual audio source volumes give a greater volume range, improving perception of volume changes
+        // This temporary float is used to extract and examine the current volume of our dynamic music in our music mixer,
+        // and to lerp said value towards the goal volume we calculated
         float currentDynamicMusicVolume = 0;
+
         MusicMasterMixer.GetFloat("DynamicMusicVolume", out currentDynamicMusicVolume);
 
-        // Let's check if the current volume is high enough - if not, we'll increase it gradually.
-        if (currentDynamicMusicVolume < dynamicMusicVolume)
+        // We only change the current mixer's value if it's currently outside of our chosen accuracy level
+        if (currentDynamicMusicVolume < (dynamicMusicVolume - dynamicMusicAccuracyBuffer) ||
+            currentDynamicMusicVolume > (dynamicMusicVolume + dynamicMusicAccuracyBuffer))
         {
-            MusicMasterMixer.SetFloat("DynamicMusicVolume", currentDynamicMusicVolume + (Time.deltaTime*(standardMusicFadeSpeed * 100)));
+            currentDynamicMusicVolume = Mathf.Lerp(currentDynamicMusicVolume, dynamicMusicVolume, Time.deltaTime * standardMusicFadeSpeed * 50);
+            MusicMasterMixer.SetFloat("DynamicMusicVolume", currentDynamicMusicVolume);
         }
         // ========================================================================================================================
     }
@@ -257,6 +317,13 @@ public class MusicControllerDA : MonoBehaviour
             FadeOut(musicSources[(int)MusicSourceIndex.Background], standardMusicFadeSpeed);
         }
 
+        // THIS IS A TEMPORARY AMENDMENT
+        if (SecBackgroundInstrumentIndex != -1)                                       // implies secondary background instrument exists
+        {
+            // if one is playing, we'll fade it out nicely
+            FadeOut(musicSources[(int)MusicSourceIndex.BackTemp], standardMusicFadeSpeed);
+        }
+
         // We can then reinitialise this index variable before searching for a new relevent index
         // That way, if this is still -1 at the end of the loop, we know a backing instrument wasn't found
         BackgroundInstrumentIndex = -1;
@@ -271,6 +338,26 @@ public class MusicControllerDA : MonoBehaviour
             }
         }
         // This new index's clip will be automatically played when loading our first song section
+
+        #region Temporary secondary Background control
+        // NOTE - this section will either be deleted or revised to a more dynamic state in the next iteration
+
+        // We can then reinitialise this index variable before searching for a new relevent index
+        // That way, if this is still -1 at the end of the loop, we know a backing instrument wasn't found
+        SecBackgroundInstrumentIndex = -1;
+
+        // The loop through the instruments looking for a secondaryBackground Instrument
+        for (int i = 0; i < newSong.songInstruments.Count; i++)
+        {
+            if (newSong.songInstruments[i] == secondaryBackgroundInstrument)
+            {
+                SecBackgroundInstrumentIndex = i;
+                break;
+            }
+        }
+        // This new index's clip will be automatically played when loading our first song section
+        #endregion
+
         // End Background Instrument Initialisation ====================================================================================
 
 
@@ -315,7 +402,8 @@ public class MusicControllerDA : MonoBehaviour
             musicSources[(int)MusicSourceIndex.Mobility].clip);
             
             // If the clip was reassigned, the source will stop playing. In this case, we set the correct time and tell it to continue playing
-            if (!musicSources[(int)MusicSourceIndex.Mobility].isPlaying)
+            // But we only want to do that if there is actually a clip present in that audio source (some instruments don't have clips for certain sections)
+            if (!musicSources[(int)MusicSourceIndex.Mobility].isPlaying && musicSources[(int)MusicSourceIndex.Mobility].clip != null)
             {
                 musicSources[(int)MusicSourceIndex.Mobility].Play();         // We'll start the new clip
 
@@ -337,7 +425,8 @@ public class MusicControllerDA : MonoBehaviour
             musicSources[(int)MusicSourceIndex.Offense].clip);
 
             // If the clip was reassigned, the source will stop playing. In this case, we set the correct time and tell it to continue playing
-            if (!musicSources[(int)MusicSourceIndex.Offense].isPlaying)
+            // But we only want to do that if there is actually a clip present in that audio source (some instruments don't have clips for certain sections)
+            if (!musicSources[(int)MusicSourceIndex.Offense].isPlaying && musicSources[(int)MusicSourceIndex.Offense].clip != null)
             {
                 musicSources[(int)MusicSourceIndex.Offense].Play();          // We'll start the new clip
 
@@ -358,7 +447,8 @@ public class MusicControllerDA : MonoBehaviour
             musicSources[(int)MusicSourceIndex.Defense].clip);
 
             // If the clip was reassigned, the source will stop playing. In this case, we set the correct time and tell it to continue playing
-            if (!musicSources[(int)MusicSourceIndex.Defense].isPlaying)
+            // But we only want to do that if there is actually a clip present in that audio source (some instruments don't have clips for certain sections)
+            if (!musicSources[(int)MusicSourceIndex.Defense].isPlaying && musicSources[(int)MusicSourceIndex.Defense].clip != null)
             {
                 musicSources[(int)MusicSourceIndex.Defense].Play();          // We'll start the new clip
 
@@ -381,6 +471,9 @@ public class MusicControllerDA : MonoBehaviour
         offenseVolume = GetMusicSourceVolume(OffenseLevel);
         defenseVolume = GetMusicSourceVolume(DefenseLevel);
 
+        // Update our background volume levels based on the current overall playstyle energy
+        backgroundVolume = GetBackgroundMusicSourceVolume(playstyleEnergy);
+
         // Then lerp towards these volume levels in our actual volume settings for our audio sources
         musicSources[(int)MusicSourceIndex.Mobility].volume =
             Mathf.Lerp(musicSources[(int)MusicSourceIndex.Mobility].volume, mobilityVolume, standardVolumeMorphSpeed * Time.deltaTime);
@@ -388,6 +481,11 @@ public class MusicControllerDA : MonoBehaviour
             Mathf.Lerp(musicSources[(int)MusicSourceIndex.Offense].volume, offenseVolume, standardVolumeMorphSpeed * Time.deltaTime);
         musicSources[(int)MusicSourceIndex.Defense].volume =
             Mathf.Lerp(musicSources[(int)MusicSourceIndex.Defense].volume, defenseVolume, standardVolumeMorphSpeed * Time.deltaTime);
+
+        musicSources[(int)MusicSourceIndex.Background].volume =
+            Mathf.Lerp(musicSources[(int)MusicSourceIndex.Background].volume, backgroundVolume, standardVolumeMorphSpeed * Time.deltaTime);
+        musicSources[(int)MusicSourceIndex.BackTemp].volume =
+            Mathf.Lerp(musicSources[(int)MusicSourceIndex.BackTemp].volume, backgroundVolume, standardVolumeMorphSpeed * Time.deltaTime);
 
         // End volume assignment ==========================================================================================================
     }
@@ -420,6 +518,49 @@ public class MusicControllerDA : MonoBehaviour
             // We want to rescale the energy value (lying between HighClipThreshold and categoryMaxLevel) to a volume level 
             // (lying between medClipMin and medClipMax)
             newVolume = RescaleValue(categoryLevel, highClipThreshold, categoryMax, highClipMin, highClipMax); 
+        }
+
+        // Finally, we never want our volume to go higher than 100% - so we make sure the returned value is 1 or less.
+        if (newVolume > 1)
+        {
+            return 1;
+        }
+        else
+        {
+            return newVolume;
+        }
+    }
+
+
+
+    /// <summary>
+    /// Takes the current level overall playstyle energy level and converts it to a volume level that falls between the minimum and
+    /// maximum volumes of the type of clip playing (low, med or high), based on the publicly assigned values for these.
+    /// </summary>
+    /// <param name="playstyleEnergyLevel">The energy level of a category to be converted to a volume value</param>
+    /// <returns>A volume value between 0 and 1</returns>
+    float GetBackgroundMusicSourceVolume(float playstyleEnergyLevel)
+    {
+        float newVolume = 0;  // We'll use this to temporarily store the result of our volume calculation
+
+        if (playstyleEnergyLevel < medBGClipThreshold)                 // Low energy clip is playing
+        {
+            // We want to rescale the energy value (lying between 0 and medClipThreshold) to a volume level 
+            // (lying between lowClipMin and lowClipMax)
+            newVolume = RescaleValue(playstyleEnergyLevel, 0, medBGClipThreshold, lowClipMin, lowClipMax);
+        }
+        else if (playstyleEnergyLevel < highBGClipThreshold)           // Medium energy clip is playing
+        {
+            // We want to rescale the energy value (lying between medClipThreshold and highClipThreshold) to a volume level 
+            // (lying between medClipMin and medClipMax)
+            newVolume = RescaleValue(playstyleEnergyLevel, medBGClipThreshold, highBGClipThreshold, medClipMin, medClipMax);
+        }
+        else                                                  // High energy clip is playing
+        {
+            // We want to rescale the energy value (lying between HighClipThreshold and categoryMaxLevel) to a volume level 
+            // (lying between medClipMin and (medClipMax * the number of categories) )
+            newVolume = RescaleValue(playstyleEnergyLevel, highBGClipThreshold, 
+                (categoryMax * numberOfAbilityCategories), highClipMin, highClipMax);
         }
 
         // Finally, we never want our volume to go higher than 100% - so we make sure the returned value is 1 or less.
@@ -502,8 +643,7 @@ public class MusicControllerDA : MonoBehaviour
     {
         if (SectionControl)  // When using Section control, we Have to analyse the current energy of the player's playstyle and choose a section with energy to match
         {
-            UpdatePlaystyleEnergy();              // Calculate a new total energy reflecting the player's playstyle
-
+            
             // First we'll check if our playstyle energy is smaller than the lowest rated section of this song, and if we're already playing that lowest section
             if (currentSongSection == currentSong.lowestSection && currentSong.sectionDetails[currentSongSection].songSectionEnergy > playstyleEnergy)
             {
@@ -596,6 +736,18 @@ public class MusicControllerDA : MonoBehaviour
         playstyleEnergy = Mathf.Clamp(MobilityLevel, 0, categoryMax) +
             Mathf.Clamp(OffenseLevel, 0, categoryMax) +
             Mathf.Clamp(DefenseLevel, 0, categoryMax);
+
+        // Using this new energy, we'll update our dynamic music mixer's goal volume
+        UpdateDynamicMusicVolume();
+    }
+
+
+    /// <summary>
+    /// Calculates a new volume for our dynamic music mixer to lerp to
+    /// </summary>
+    void UpdateDynamicMusicVolume()
+    {
+        dynamicMusicVolume =  RescaleValue(playstyleEnergy, 0, (categoryMax * numberOfAbilityCategories), minDynamicMusicVolume, maxDynamicMusicVolume);
     }
 
 
@@ -610,7 +762,46 @@ public class MusicControllerDA : MonoBehaviour
 
         // We cache the length of the current section for easy reference. As all of the section's clips are the same length,
         // we can just look at 1 of them to extract the length we're looking for.
-        currentSectionLength = currentSong.sortedNodes[0, currentSongSection].lowClip.length;
+        // We'll use a for loop to find a viable clip to look at (as some instruments don't have clips for certain sections)
+        // We'll use this clip variable to cache the first relevant clip we find
+        AudioClip lengthReferenceClip = null;
+
+        for (int i = 0; i < currentSong.sortedNodes.GetLength(0); i++)
+        {
+            // check if the low clip exists
+            if (currentSong.sortedNodes[i, currentSongSection].lowClip != null)
+            {
+                lengthReferenceClip = currentSong.sortedNodes[i, currentSongSection].lowClip;
+                break;
+            }
+            // if not, we look for the medium clip
+            else if (currentSong.sortedNodes[i, currentSongSection].medClip != null)
+            {
+                lengthReferenceClip = currentSong.sortedNodes[i, currentSongSection].medClip;
+                break;
+            }
+            // and finally we check for a high clip
+            else if (currentSong.sortedNodes[i, currentSongSection].highClip != null)
+            {
+                lengthReferenceClip = currentSong.sortedNodes[i, currentSongSection].highClip;
+                break;
+            }
+            // if nothing was found, we check the clips for the next instrument in the array
+        }
+
+        // We check if we actually found a viable clip to use
+        if (lengthReferenceClip != null)
+        {
+            // if so, we extract it's length
+            currentSectionLength = lengthReferenceClip.length;
+        }
+        else
+        {
+            // if not, there's an issue. We throw a descriptive warning and set a default value for our length
+            Debug.LogWarning("Section length could not be found. Section " + currentSongSection + " of " +
+                currentSong.name + " contains no viable audio clips.");
+            currentSectionLength = Time.deltaTime;
+        }
         
         // We reset the timer, so it can start timing the new section that was just loaded.
         currentSectionTimer = 0;
@@ -626,6 +817,8 @@ public class MusicControllerDA : MonoBehaviour
                         GetCorrectEnergyClip(currentSong.sortedNodes[MobilityInstrumentIndex, currentSongSection],
                         currentSong.sortedNodes[MobilityInstrumentIndex, previousSection], MobilityLevel,
                         musicSources[(int)MusicSourceIndex.Mobility].clip);
+
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////          // We need to check if the function actually found a fitting clip before trying to play it
             musicSources[(int)MusicSourceIndex.Mobility].time = 0;                            // We make sure the new clip starts from the beginning
             musicSources[(int)MusicSourceIndex.Mobility].Play();
         }
@@ -655,10 +848,26 @@ public class MusicControllerDA : MonoBehaviour
 
         if (BackgroundInstrumentIndex != -1)
         {
-            // Note that the background will only have one clip level (I assume), hence we just load the low clip
-            musicSources[(int)MusicSourceIndex.Background].clip = currentSong.sortedNodes[BackgroundInstrumentIndex, currentSongSection].lowClip;
+            musicSources[(int)MusicSourceIndex.Background].clip =
+                    GetBackgroundEnergyClip(currentSong.sortedNodes[BackgroundInstrumentIndex, currentSongSection],
+                    currentSong.sortedNodes[BackgroundInstrumentIndex, previousSection], playstyleEnergy,
+                    musicSources[(int)MusicSourceIndex.Background].clip);
+
             musicSources[(int)MusicSourceIndex.Background].Play();
         }
+
+
+        // THIS IS A TEMPORARY AMENDMENT
+        if (SecBackgroundInstrumentIndex != -1)
+        {
+            musicSources[(int)MusicSourceIndex.BackTemp].clip =
+                    GetBackgroundEnergyClip(currentSong.sortedNodes[SecBackgroundInstrumentIndex, currentSongSection],
+                    currentSong.sortedNodes[SecBackgroundInstrumentIndex, previousSection], playstyleEnergy,
+                    musicSources[(int)MusicSourceIndex.BackTemp].clip);
+
+            musicSources[(int)MusicSourceIndex.BackTemp].Play();
+        }
+
         // =============================================================================================================
 
     }
@@ -746,6 +955,59 @@ public class MusicControllerDA : MonoBehaviour
             return currentNode.medClip;
         }
         else if (currentEnergyLevel < medClipThreshold && currentEnergyLevel >= medLowerThreshold) // Implies we're still in the buffer space
+        {
+            // this implies the energy was med, but has now dropped to low. In this case, we want to wait a little while 
+            // before switching back to smooth out the experience a little
+            if (currentClip == previousNode.medClip)
+            {
+                return currentNode.medClip;
+            }
+
+            // If that's not the case, we were coming from the low clip anyway and don't have to apply the buffer
+            return currentNode.lowClip;
+        }
+        else                                                  // Playstyle is full-on low energy
+        {
+            return currentNode.lowClip;
+        }
+
+    }
+
+
+
+    /// <summary>
+    /// Compares the given value to the Background Clip Thresholds and returns either the low energy, medium energy or high energy clip associated
+    /// with the given current node. This overloaded version analyses the node that was previously playing to find the 
+    /// information it needs. Use it in conjunction with section changes.
+    /// </summary>
+    /// <param name="currentNode">The node that the clip will be returned from.</param> 
+    /// <param name="previousNode">The node that provided the last clip to be played by the audio source</param> 
+    /// <param name="currentEnergyLevel">The current overall player energy level.</param>
+    /// <param name="currentClip">The clip currently being played by the Audio Source in question</param>
+    /// <returns>Low, Medium or High audio clip associated with the given node</returns>
+    public AudioClip GetBackgroundEnergyClip(MusicNode currentNode, MusicNode previousNode, float currentEnergyLevel, AudioClip currentClip)
+    {
+        if (currentEnergyLevel >= highBGClipThreshold)          // Playstyle is high energy
+        {
+            return currentNode.highClip;   // No need to put a buffer here - there's no higher clip to fall from
+        }
+        else if (currentEnergyLevel < highBGClipThreshold && currentEnergyLevel >= highLowerBGThreshold) // Implies we're still in the buffer space
+        {
+            // this implies the energy was high, but has now dropped to medium. In this case, we want to wait a little while 
+            // before switching back to smooth out the experience a little
+            if (currentClip == previousNode.highClip)
+            {
+                return currentNode.highClip;
+            }
+
+            // If that's not the case, we were coming from the low clip and don't have to apply the buffer
+            return currentNode.medClip;
+        }
+        else if (currentEnergyLevel >= medBGClipThreshold)      // Playstyle is medium energy
+        {
+            return currentNode.medClip;
+        }
+        else if (currentEnergyLevel < medBGClipThreshold && currentEnergyLevel >= medLowerBGThreshold) // Implies we're still in the buffer space
         {
             // this implies the energy was med, but has now dropped to low. In this case, we want to wait a little while 
             // before switching back to smooth out the experience a little
@@ -956,6 +1218,26 @@ public class MusicControllerDA : MonoBehaviour
 
 
     /// <summary>
+    /// Call this each time a category level changes - it will reset the rate of decay to its slowest possible level
+    /// and reset the apex delay timer - which gives a short delay before this rate starts increasing again
+    /// </summary>
+    public void ResetRateOfDecay()
+    {
+        currentDecayRate = minDecayRate;
+        decayDelayTimer = 0;
+    }
+
+    /// <summary>
+    /// Returns the current speed at which category levels are decaying.
+    /// </summary>
+    /// <returns>Current rate at which category levels decay</returns>
+    public float GetCurrentRateOfDecay()
+    {
+        return currentDecayRate;
+    }
+
+
+    /// <summary>
     /// Adjusts the current Mobility level by the float given. Value will be clamped, and any necessary music transitions will be called.
     /// </summary>
     /// <param name="adjustment">How much mobility Level will change by</param>
@@ -1095,6 +1377,16 @@ public class MusicControllerDA : MonoBehaviour
     public float GetDefenseVolume()
     {
         return defenseVolume;
+    }
+
+    /// <summary>
+    /// Returns the current calculated volume for the background music clips. Note that this is not necessarily the actual volume of the audio source
+    /// playing the background music - this audio source's volume will be lerped toward the value this returns.
+    /// </summary>
+    /// <returns>The current calculated volume for background tracks.</returns>
+    public float GetBackgroundVolume()
+    {
+        return backgroundVolume;
     }
 
     #endregion
