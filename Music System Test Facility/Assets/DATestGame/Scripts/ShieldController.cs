@@ -14,6 +14,12 @@ public class ShieldController : MonoBehaviour
     float timer = 0;
     CircleCollider2D shieldCollider;               // the collider on the shield
 
+    [Header("Sound Effect Settings")]
+    public GameObject tempAudioEffect;             // Specialised GameObject designed to die after playing its sound
+    public AudioClip breakSoundEffect;             // The sound that should play when the shield breaks
+
+    public float breakVolume = 1;                  // Volume of shield break sound effect
+
     [HideInInspector]
     public DAPlayerController playerController;    // cached reference to our player
 
@@ -51,6 +57,15 @@ public class ShieldController : MonoBehaviour
                     MusicControllerDA.musicControllerInstance.SetDefenseLevel(playerController.lowEnergy);
                 }
 
+                // Play our shield's break sound effect
+                GameObject tempSourceObj = Instantiate(tempAudioEffect) as GameObject;
+                AudioSource tempAudioSource = tempSourceObj.GetComponent<AudioSource>();
+                tempAudioSource.clip = breakSoundEffect;
+                tempAudioSource.volume = breakVolume;
+                tempAudioSource.GetComponent<TempSoundEffect>().effectPlayed = true;
+                tempAudioSource.Play();
+
+                // and destroy it
                 Destroy(gameObject);
             }
             else  // If it hasn't reached that point yet, we continue shrinking it
@@ -103,6 +118,15 @@ public class ShieldController : MonoBehaviour
                 }
             }
 
+            // Play our shield's break sound effect
+            GameObject tempSourceObj = Instantiate(tempAudioEffect) as GameObject;
+            AudioSource tempAudioSource = tempSourceObj.GetComponent<AudioSource>();
+            tempAudioSource.clip = breakSoundEffect;
+            tempAudioSource.volume = breakVolume;
+            tempAudioSource.GetComponent<TempSoundEffect>().effectPlayed = true;
+            tempAudioSource.Play();
+
+            // and destroy it
             Destroy(gameObject);
         }
     }

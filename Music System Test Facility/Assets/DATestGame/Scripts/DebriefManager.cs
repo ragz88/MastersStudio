@@ -13,6 +13,9 @@ public class DebriefManager : MonoBehaviour
     public Image finalDebrief;       // shown when both finished
     public Image defaultImage;       // shown if something goes wrong
 
+    public Button surveyButton;      // This will only be made interactable when both games have been played
+    public Text surveyButtonText;    // We'll brighten this up when the button is clickable
+
     Image imageToShow;               // This will be used to fade the selected image in
 
     // Start is called before the first frame update
@@ -21,6 +24,8 @@ public class DebriefManager : MonoBehaviour
         if (MenuManager.alchemyPlayed && MenuManager.prefabricatedPlayed)
         {
             imageToShow = finalDebrief;
+            surveyButton.interactable = true;
+            surveyButtonText.color = Color.white;
         }
         else if(MenuManager.alchemyPlayed)
         {
@@ -70,5 +75,14 @@ public class DebriefManager : MonoBehaviour
     public void QuitGame()
     {
         Application.Quit();
+    }
+
+
+    /// <summary>
+    /// Loads a URL, taking the player to the google forms survey created for this iteration.
+    /// </summary>
+    public void GoToSurvey()
+    {
+        Application.OpenURL("https://docs.google.com/forms/d/e/1FAIpQLScokdydattu_7Y0LyUYVmmEdwcohR1K5rMXZiUbfiIpA6jXkw/viewform?usp=sf_link");
     }
 }

@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.XR.WSA.Input;
 
 /// <summary>
 /// Stores a Single Instrument's AudioClips within a single section of a song. Please see accompanying documentation.

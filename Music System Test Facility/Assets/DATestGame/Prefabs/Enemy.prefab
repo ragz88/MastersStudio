@@ -144,3 +144,11 @@ MonoBehaviour:
     type: 3}
   tripleDeathParticles: {fileID: 8429321613299993399, guid: 9743594368d108b48a130778750b4692,
     type: 3}
+  tempAudioEffect: {fileID: 7927775294665486326, guid: 3cea0a06aa261304f8f99cde32856e1b,
+    type: 3}
+  killSoundEffect: {fileID: 8300000, guid: c70d2d740395913419ba629775418bd7, type: 3}
+  tripleKillSoundEffect: {fileID: 8300000, guid: 32638b0536da4374e8b261b5cbb9d42f,
+    type: 3}
+  standardDeathVolume: 0.25
+  tripleKillVolume: 0.6
+  enemyCollisionDeathVolume: 0.06

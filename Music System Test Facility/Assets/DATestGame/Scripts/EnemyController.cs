@@ -19,6 +19,16 @@ public class EnemyController : MonoBehaviour
     Vector2 enemyDirection;
     Rigidbody2D enemyBody;
 
+    [Header("Sound Effect Settings")]
+    public GameObject tempAudioEffect;               // Specialised GameObject designed to die after playing its sound
+    AudioSource deathAudioSource;                    // Plays the sound effect on an enemy's death - obtained from tempAudioEffect
+    public AudioClip killSoundEffect;                // The sound that should be played on a regular death
+    public AudioClip tripleKillSoundEffect;          // The sound that should play on a successful triple kill
+
+    public float standardDeathVolume = 0.25f;        // Volume that should be played on a regular enemy death
+    public float tripleKillVolume = 1f;              // Volume of death sound upon a succesfult triple kill
+    public float enemyCollisionDeathVolume = 0.06f;  // Volume of sound when two enemies kill each other
+
     float enemySpeed;
 
     // This tracks how many enemies have collided with eachother in succession
@@ -93,6 +103,15 @@ public class EnemyController : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
+        // We don't want to play any sound if the enemy dies from the outer wall
+        if (!collision.gameObject.CompareTag("KillBox"))
+        {
+            GameObject tempSource = Instantiate(tempAudioEffect) as GameObject;
+            deathAudioSource = tempSource.GetComponent<AudioSource>();
+            deathAudioSource.clip = killSoundEffect;
+            deathAudioSource.volume = standardDeathVolume;
+        }
+
         // Let's examine what killed this guy. If it was a bullet, we'll add some score to the offense level and start
         // the tracking for combos
         if (collision.gameObject.CompareTag("Bullet"))
@@ -114,6 +133,8 @@ public class EnemyController : MonoBehaviour
                     // spawn some dope particles for feedback
                     playerController.SpawnKillComboParticles();
                     Instantiate(tripleDeathParticles, transform.position, Quaternion.identity);
+                    deathAudioSource.clip = tripleKillSoundEffect;
+                    deathAudioSource.volume = tripleKillVolume;
 
                     if (!playerController.simulatePrefabPlay)
                     {
@@ -164,11 +185,20 @@ public class EnemyController : MonoBehaviour
                     // Here we end the game with a win message
                     DAGameManager.GameManagerInstance.PlayerWon();
                 }
+
+                // We'll also reduce the audio volume a little
+                deathAudioSource.volume = enemyCollisionDeathVolume;
             }
         }
 
-        // Destroy the enemy
+        // Destroy the enemy, after spawning some visual effects and playing a death sound
         Instantiate(deathParticles, transform.position, Quaternion.identity);
+        if (deathAudioSource != null)
+        {
+            deathAudioSource.Play();
+            deathAudioSource.gameObject.GetComponent<TempSoundEffect>().effectPlayed = true;
+        }
+
         Destroy(gameObject);
     }
 }

@@ -26,7 +26,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/DATut.unity
     guid: 4f2213e50f2745d4cad9af353d70287c
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/DynamicAlchemyTest.unity
     guid: 2cda990e2423bbf4892e6590ba056729
   m_configObjects: {}

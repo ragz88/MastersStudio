@@ -11,6 +11,8 @@ public class DAPlayerController : MonoBehaviour
 
     public float dashSpeed = 15;                   // How fast the player moves when dashing
     public float dashLength = 0.5f;                // How long the player's dash lasts
+    public Color dashColour;                       // The colour the player should turn when dashing
+    SpriteRenderer playerBodySpriteRend;           // The white triangle sprite renderer representing the player
 
     public float shieldCooldown = 2.5f;            // How long the player must wait before they can spawn a second shield
     private float shieldTimer = 0;                 // Used to check if player can use the shield
@@ -54,9 +56,10 @@ public class DAPlayerController : MonoBehaviour
     public bool specialThroughDash = false;        // set to true when dashing dangerously through past enemies
 
     [Header("Category Point Values")]
-    public float dashingThroughEnemy = 0.45f;
-    public float dashingAwayFromEnemy = 0.3f;
-    public float dashingPlain = 0.1f;
+    public float standardMovement = 0.1f;          // Constantly added to mobility if the player is moving
+    public float dashingThroughEnemy = 0.45f;      // Added to mobility when player dahes through an enemy
+    public float dashingAwayFromEnemy = 0.3f;      // Added to mobility when player dashes directly through an enemy's path
+    public float dashingPlain = 0.1f;              // Added to mobility just for dashing in general
 
     public float shieldPresent = 0.1f;             // Constantly added to Defense level if shield is in the field
     public float shieldBlockedEnemy = 0.3f;        // Added to Defense level if shield kills and enemy
@@ -65,6 +68,14 @@ public class DAPlayerController : MonoBehaviour
     public float shotBullet = 0.1f;                // Standard increase just for shooting
     public float shotEnemy = 0.3f;                 // Points for shooting an enemy
     public float tripleKill = 0.6f;                // Big bonus points for landing 3 kills in quick succession
+
+
+    [Header("Sound Effect Settings")]
+    public GameObject tempAudioEffect;               // Specialised GameObject designed to die after playing its sound
+    public AudioClip deathSoundEffect;               // The sound that should be played on player's death
+    AudioSource dashAudioSource;                     // the source, on the player game object, that will play the dash sound
+
+    public float deathSoundVolume = 1f;           // Volume of effect that should be played when player dies
 
 
     #region Prefabricated Play Settings
@@ -104,6 +115,8 @@ public class DAPlayerController : MonoBehaviour
         playerBody = GetComponent<Rigidbody2D>();
         playerCollider = GetComponent<Collider2D>();
         mainCam = Camera.main;
+        playerBodySpriteRend = GetComponent<SpriteRenderer>();
+        dashAudioSource = GetComponent<AudioSource>();
 
         if (simulatePrefabPlay)
         {
@@ -129,6 +142,12 @@ public class DAPlayerController : MonoBehaviour
         // (We conserve direction, but make the magnitude 1)
         Vector2 moveDirection = new Vector2(xMovement, yMovement).normalized;
 
+        if (new Vector2(xMovement, yMovement).magnitude > 0.1f && !simulatePrefabPlay)
+        {
+            // Add a small participation prize to mobility just for moving
+            MusicControllerDA.musicControllerInstance.AdjustMobilityLevel(standardMovement * Time.deltaTime);
+        }
+
 
         // Dash ================================================================================================
             // If the previous dash is essentially done, we allow a new one to happen
@@ -144,6 +163,12 @@ public class DAPlayerController : MonoBehaviour
                 {
                     dashTrails[i].emitting = true;
                 }
+
+                // And change the player colour to show their invulnerability time
+                playerBodySpriteRend.color = dashColour;
+
+                // and play our dash sound effect
+                dashAudioSource.Play();
 
                 dashing = true;
 
@@ -179,6 +204,9 @@ public class DAPlayerController : MonoBehaviour
                 {
                     dashTrails[i].emitting = false;
                 }
+
+                // And reset our colour
+                playerBodySpriteRend.color = Color.white;
 
                 // We only want to run the following if this is the first fram after a completed dash - hence we check dashing
                 if (dashing)
@@ -508,10 +536,19 @@ public class DAPlayerController : MonoBehaviour
     /// </summary>
     public void PlayerDeath()
     {   
-        // We'll make some juicy visual effects, then destroy the player
+        // We'll make some juicy visual and audio effects, then destroy the player
         if (!DAGameManager.GameManagerInstance.playerDead)
         {
             Instantiate(playerDeathParticles, transform.position, Quaternion.identity);
+
+            GameObject tempSource = Instantiate(tempAudioEffect) as GameObject;
+            AudioSource soundEffectSource = tempSource.GetComponent<AudioSource>();
+            soundEffectSource.clip = deathSoundEffect;
+            soundEffectSource.volume = deathSoundVolume;
+            soundEffectSource.Play();
+            soundEffectSource.GetComponent<TempSoundEffect>().effectPlayed = true;
+
+
             Destroy(gameObject);
         }
         
