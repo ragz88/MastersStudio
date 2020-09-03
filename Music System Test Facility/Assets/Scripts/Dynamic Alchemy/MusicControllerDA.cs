@@ -190,7 +190,7 @@ public class MusicControllerDA : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Debug.Log("Current section: " + currentSongSection);
+        //Debug.Log("Current section: " + currentSongSection);
         #region Temporary Testing Controls
         /*
         // ----------------------------------------------

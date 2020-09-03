@@ -15,10 +15,13 @@ public class TutorialController : MonoBehaviour
 
     public int sceneToLoad = 0;
 
-    public string newButtonCaption = "Get Started";
+    public string newButtonCaption = "Get Started";       // The button text on the final tut page will change to this string
     public Text buttonText;
 
-    public static bool tutComplete = false;
+    public static bool tutComplete = false;               // Set to true once the tutorial has been finished
+
+    public GameObject loadingBarObj;                      // Images used to represent the next scene's loading progress
+    public Image loadingBar;                              // The actual filled image used to represent load percentage
 
     int currentTutPage = 0;
 
@@ -66,13 +69,35 @@ public class TutorialController : MonoBehaviour
     {
         currentTutPage++;
 
+        // Here, we activate our loading bar just before it's needed
+        if (currentTutPage == tutPages.Length - 1)
+        {
+            loadingBarObj.SetActive(true);
+        }
+
         // Here we'll go to the next scene
         if (currentTutPage == tutPages.Length)
         {
             tutComplete = true;
 
             // Load the next scene
-            SceneManager.LoadScene(sceneToLoad);
+            StartCoroutine(LoadAsynchronously(sceneToLoad));
+        }
+    }
+
+    IEnumerator LoadAsynchronously (int sceneIndex)
+    {
+        AsyncOperation operation = SceneManager.LoadSceneAsync(sceneIndex);
+
+        while(!operation.isDone)
+        {
+            // Because of the way loading asynch works, 0.9 actually represents when the scene is ready - 
+            // so we adjust that value to represent 100% loaded
+            float progress = Mathf.Clamp01 (operation.progress / 0.9f);
+            loadingBar.fillAmount = progress;
+            //Debug.Log("Load Progress: " + progress);
+
+            yield return null;
         }
     }
 }

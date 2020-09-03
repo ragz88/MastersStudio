@@ -14,6 +14,30 @@ AudioMixerEffectController:
   m_SendTarget: {fileID: 0}
   m_EnableWetMix: 0
   m_Bypass: 0
+--- !u!244 &-2689614509784393102
+AudioMixerEffectController:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  m_EffectID: cfe6f6302b012e444b9252b8bda2510d
+  m_EffectName: Echo
+  m_MixLevel: c4968b18a696d4f40a04e4c5a1c66031
+  m_Parameters:
+  - m_ParameterName: Delay
+    m_GUID: 4ae11dbfad3f7c340af9e4d2b197f3a8
+  - m_ParameterName: Decay
+    m_GUID: e9138b0f89cead1479a625d0eec1f428
+  - m_ParameterName: Max channels
+    m_GUID: fa686efe240c9c94d8460dde52cbe30a
+  - m_ParameterName: Drymix
+    m_GUID: c8343969d7adcc94fa7ec2483e9bcc83
+  - m_ParameterName: Wetmix
+    m_GUID: 193ccf2070b3b7541a0ef320257c7440
+  m_SendTarget: {fileID: 0}
+  m_EnableWetMix: 0
+  m_Bypass: 0
 --- !u!243 &-186624219931646067
 AudioMixerGroupController:
   m_ObjectHideFlags: 0
@@ -80,6 +104,7 @@ AudioMixerGroupController:
   m_Send: 00000000000000000000000000000000
   m_Effects:
   - {fileID: 24400004}
+  - {fileID: -2689614509784393102}
   m_UserColorIndex: 0
   m_Mute: 0
   m_Solo: 0
@@ -108,6 +133,7 @@ AudioMixerSnapshotController:
   m_AudioMixer: {fileID: 24100000}
   m_SnapshotID: 0be3d68007fcd07479da49278573dad1
   m_FloatValues:
+    193ccf2070b3b7541a0ef320257c7440: 0.505
     16cda27029edb4d4babd5f30246d62cf: 0
     79183bb09beca304f9074c83fc830c8f: 0.78
     048d5f01bc2fc4d47bb4747f0cec3e47: -7473
@@ -127,9 +153,11 @@ AudioMixerSnapshotController:
     80d072bc5d171ae4f846eef9dba3645a: 72
     1f6c681db0943eb4f9e1ae779a638e47: 0
     e6ade63e85baadc4d93c469a1f6126e3: -5889
-    5633b29effa83ef4b991afb781ec2171: -6.5566154
+    5633b29effa83ef4b991afb781ec2171: -4.1973577
     1d5dcfbe9f9617d4a8c63c133f5838a1: 11490
+    e9138b0f89cead1479a625d0eec1f428: 0.103
     1d52aa8fdf932f24791a5bfa569f465f: 1669
+    4ae11dbfad3f7c340af9e4d2b197f3a8: 32
   m_TransitionOverrides: {}
 --- !u!243 &3049555470570046675
 AudioMixerGroupController:

@@ -3124,7 +3124,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49e0c04ee6d6d2f4b8635c6f4af341e0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  frequencyRateOfIncrease: 1.9
+  frequencyRateOfIncrease: 1.4
   player: {fileID: 215238182}
   enemyPrefab: {fileID: 2610146070708176010, guid: 32987eeab229ea14883c4a0856a1f977,
     type: 3}
