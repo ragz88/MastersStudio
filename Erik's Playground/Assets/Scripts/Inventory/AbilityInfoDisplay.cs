@@ -26,7 +26,7 @@ public class AbilityInfoDisplay : MonoBehaviour
 
     public Ability currentlySelectedAbility = null;   // Stores a reference to the ability currently described by the Ability Information panel
 
-    AbilityInfoPrompt[] infoPagePrompts;       // We''l use this to cache a reference to the AbilityInfoPrompt components on each of our prompt gameObjects
+    AbilityInfoPrompt[] infoPagePrompts;       // We'll use this to cache a reference to the AbilityInfoPrompt components on each of our prompt gameObjects
 
     private void Start()
     {
