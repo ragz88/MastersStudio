@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9ef19a707bf671a4bb3d73dc9bb6b794, type: 3}
+  m_Name: Misc8
+  m_EditorClassIdentifier: 
+  nodeSong: {fileID: 11400000, guid: a7e9897ef9bba864b9566c2c85b22a03, type: 2}
+  nodeSection: 8
+  nodeInstrument: {fileID: 11400000, guid: 07293bee0f4948c4484341d0e45a635d, type: 2}
+  lowClip: {fileID: 8300000, guid: 55b5313d4ee139e44979bd8643ad80b7, type: 3}
+  medClip: {fileID: 8300000, guid: 9e6366422a04b124e88b85dbca6f10fe, type: 3}
+  highClip: {fileID: 0}

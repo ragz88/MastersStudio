@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a002c7430f3414468ad22149fd87d92, type: 3}
+  m_Name: BassAbility
+  m_EditorClassIdentifier: 
+  abilityName: Bass
+  abilityDescription: Ability Description
+  icon: {fileID: 21300000, guid: 693f298725d5e374ca682a6e09cef2e5, type: 3}
+  abilityCategory: 0
+  abilityType: 0
+  abilityEquipped: 0
+  currentHybridType: 0
+  abilityInstruments:
+  - specificSong: {fileID: 11400000, guid: 7c0db26f1f77b5f46a470000ed3d8df6, type: 2}
+    abilityInstrument: {fileID: 11400000, guid: 28f0d21962ab06a46881114ad6bd7367,
+      type: 2}
+  - specificSong: {fileID: 11400000, guid: a7e9897ef9bba864b9566c2c85b22a03, type: 2}
+    abilityInstrument: {fileID: 11400000, guid: 28f0d21962ab06a46881114ad6bd7367,
+      type: 2}

@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9ef19a707bf671a4bb3d73dc9bb6b794, type: 3}
+  m_Name: Piano12
+  m_EditorClassIdentifier: 
+  nodeSong: {fileID: 11400000, guid: a7e9897ef9bba864b9566c2c85b22a03, type: 2}
+  nodeSection: 12
+  nodeInstrument: {fileID: 11400000, guid: 1fa0a31103f2e9d4d91d417ddeb86aea, type: 2}
+  lowClip: {fileID: 8300000, guid: e5a53193470f04f4c819459dc6e5dec8, type: 3}
+  medClip: {fileID: 8300000, guid: 012ee01168dc03b45b396a20e3f2c4f4, type: 3}
+  highClip: {fileID: 0}
