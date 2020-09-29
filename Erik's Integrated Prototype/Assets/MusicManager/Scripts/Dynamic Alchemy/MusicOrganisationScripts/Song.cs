@@ -12,6 +12,7 @@ using UnityEngine;
 public class Song : ScriptableObject
 {
     public string songName;                          // The name of the song
+    public Instrument[] backgroundInstruments;       // The instruments in this song that should be playing in the background at all times
     public MusicNode[] musicNodes;                   // All the nodes that have a place in this song. These are sorted when the song is initialised.
     
     [HideInInspector]
@@ -82,7 +83,7 @@ public class Song : ScriptableObject
 
         for (int i = 0; i < musicNodes.Length; i++)                  // we examine each node's instrument...
         {
-            bool instrumentPresent = false;                                // this is set to true if the current node's instrument has already been found
+            bool instrumentPresent = false;                          // this is set to true if the current node's instrument has already been found
             
             // Update finalSection if this node's section value is higher than it's current value
             if (musicNodes[i].nodeSection > finalSection)
@@ -90,7 +91,7 @@ public class Song : ScriptableObject
                 finalSection = musicNodes[i].nodeSection;
             }
 
-            for (int j = 0; j < songInstruments.Count; j++)          // ...and compare it to those we've already put in our list
+            for (int j = 0; j < songInstruments.Count; j++)          // ...and compare each instrument to those we've already put in our list
             {
                 if (songInstruments[j] == musicNodes[i].nodeInstrument)
                 {

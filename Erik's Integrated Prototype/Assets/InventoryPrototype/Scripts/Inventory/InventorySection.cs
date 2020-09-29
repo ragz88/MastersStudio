@@ -16,8 +16,8 @@ public class InventorySection : MonoBehaviour
                                                                // represented and stored
 
     // We can re-use our enums from the ability class to define which abilities this section should store.
-    public Ability.AbilityType sectionAbilityType;             // This is the type of ability : Primary, Secondary or Hybrid
-    public Ability.AbilityCategory sectionAbilityCategory;     // This is the Category : Jump, Melee, Defense or Ranged.
+    //public Ability.AbilityType sectionAbilityType;             // This is the type of ability : Primary, Secondary or Hybrid
+    //public Ability.AbilityCategory sectionAbilityCategory;     // This is the Category : Jump, Melee, Defense or Ranged.
                                                                // Note that synergised abilities will not be storable - they appear automatically
                                                                // when the correct combo of regular abilities are equipped.
 

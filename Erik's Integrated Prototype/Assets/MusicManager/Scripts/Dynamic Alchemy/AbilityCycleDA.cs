@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class AbilityCycleDA : MonoBehaviour
 {
     
-    public AbilityMM[] abilities;
+    public Ability[] abilities;
 
     int currentIndex = -1;
 

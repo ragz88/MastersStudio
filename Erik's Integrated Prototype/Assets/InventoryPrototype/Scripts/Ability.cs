@@ -5,6 +5,7 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "New Ability", menuName = "Inventory/Ability")]
 public class Ability : ScriptableObject
 {
+    /*
     /// <summary>
     /// Stores the category that this ability falls under.
     /// Note: 'Synergised' are passives that appear with specific combinations of abilities.
@@ -16,6 +17,7 @@ public class Ability : ScriptableObject
         Ranged,
         Defense,
     }
+    */
 
     /// <summary>
     /// Stores the type of ability - either Primary, Secondary or a hybrid
@@ -35,15 +37,29 @@ public class Ability : ScriptableObject
     public string abilityDescription = "Ability Description";         // A description of how the ability functions
     public Sprite icon = null;                                        // The ability's icon to show in the inventory menu
 
-    public AbilityCategory abilityCategory = AbilityCategory.Jump;    // The ability's core category, 
+    public GlobalSystemSettings.AbilityCategories abilityCategory 
+        = GlobalSystemSettings.AbilityCategories.Green;                // The ability's core category, 
                                                                       // defining which menu it appears in
 
     public AbilityType abilityType = AbilityType.Primary;             // The ability's type, defining which of the slots within
                                                                       // its core category it can be equipped to
 
     public bool abilityEquipped = false;                              // Set to true if the ability is currently equipped
-    public AbilityType currentHybridType = AbilityType.Primary;       // Used exclusively for Hybrid abilies. Set to either primary or secondary,
-                                                                      // based on what they're acting as currently    
+                                                                      //public AbilityType currentHybridType = AbilityType.Primary;       // Used exclusively for Hybrid abilies. Set to either primary or secondary,
+                                                                      // based on what they're acting as currently  
+
+    /// <summary>
+    /// Stores a reference to a Song and the instrument this ability would play in said song
+    /// </summary> 
+    [System.Serializable]
+    public struct InstrumentSongPair
+    {
+        public Song specificSong;
+        public Instrument abilityInstrument;                             // The Instrument this ability would activate in the song specified
+    }
+
+    // An array of the specific instrument this ability would activate in each specific song
+    public InstrumentSongPair[] abilityInstruments;
 
 
     /// <summary>

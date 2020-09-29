@@ -31,6 +31,7 @@ public class MusicControllerDA : MonoBehaviour
                                                        // It will always lie between maxDecayRate and minDecayRate
 
 
+    /*
     [Header("Current Category Energy Levels")]
 
     [SerializeField][Range(0.25f, 2.99f)]
@@ -42,7 +43,13 @@ public class MusicControllerDA : MonoBehaviour
     [SerializeField][Range(0.25f, 2.99f)]
     private float DefenseLevel = 1;           // Increases each time player blocks/evades/parries a hit ().
 
-    
+    */
+
+    [SerializeField] [Range(0.25f, 2.99f)]
+    private float[] CategoryLevels;           // Each of the ability categories will have an element in this array 
+                                              // (whether we go with offense, defense and mobility, or something arbitrary like red, blue and green)
+
+
 
     [Header("Thresholds and Ratios")]
     public float medClipThreshold = 1.3f;     // The point at which the low clip of a node will stop playing, and the medium one will start playing
@@ -74,9 +81,13 @@ public class MusicControllerDA : MonoBehaviour
     public float highClipMin = 0.97f;         // The minimum volume a High Energy clip will play at.
     public float highClipMax    = 1f;         // The max volume a High Energy clip will play at.
 
+    /*
     private float mobilityVolume = 0;         // The mobility dynamic music sources will lerp their volumes to this value smoothly
     private float offenseVolume  = 0;         // The offense dynamic music sources will lerp their volumes to this value smoothly
     private float defenseVolume  = 0;         // The defense dynamic music sources will lerp their volumes to this value smoothly
+    */
+
+    private float[] categoryVolumes;          // The dynamic music sources will lerp their volumes to these values smoothly
 
     private float backgroundVolume = 0;       // The background music source will lerp its volume to this value smoothly
 
@@ -86,24 +97,22 @@ public class MusicControllerDA : MonoBehaviour
                                               // categoryMax
 
     [Header("Audio Sources and Components")]
-    // Stores a reference to each AudioSource used to play music and the temp AudioSources used for transitioning between musical states.
+    // Stores a reference to each AudioSource used to play dynamic music.
     // The order these sources are assigned with is specific, and represented below.
     // I considered making a struct and storing each with an accompanying name, but this was more efficient in the long run (that requires looping through the array).
-    public AudioSource[] musicSources;
+    public AudioSource[] dynamicMusicSources;
+    public AudioSource[] backgroundMusicSources;
 
     // Used to improve readability later. Each represents the index of their respective audio source in our MusicSources array
-    public enum MusicSourceIndex
+    /*public enum MusicSourceIndex
     {
         Mobility,
-        MobTemp,                               // Temps are used to seamlessly transition between two songs/musical states
         Offense,
-        OffTemp,
         Defense,
-        DefTemp,
         Background,
         BackTemp,
         SetPieceSource                         // Used to play set pieces of music in cutscenes/boss fights/transitions etc.
-    }
+    }*/
 
     // This is used to edit the volume, among other qualities, of our music Audio sources all at once
     public AudioMixer MusicMasterMixer;
@@ -120,18 +129,22 @@ public class MusicControllerDA : MonoBehaviour
 
     // We initialise these to -1 in case the player has no ability (and thus, no instrument) equipped in that slot
 
+    /*
     int MobilityInstrumentIndex = -1;          // The index of the player's mobility ability's inherent instrument within the song's 2D sortedNodes array.
     int OffenseInstrumentIndex  = -1;          // The index of the player's offense ability's inherent instrument within the song's 2D sortedNodes array.
     int DefenseInstrumentIndex  = -1;          // The index of the player's defense ability's inherent instrument within the song's 2D sortedNodes array.
     int BackgroundInstrumentIndex = -1;        // The index of the background clips within the song's 2D sortedNodes array.
     int SecBackgroundInstrumentIndex = -1;     // The index of the secondary background clips within the song's 2D sortedNodes array (these are optional).
+    */
 
+    int[] dynamicInstrumentIndeces;            // The indeces of inherent ability instruments within the song's 2D sortedNodes array.
+    int[] backgroundInstrumentIndeces;         // The index of the background instruments within the song's 2D sortedNodes array.
 
-    public Instrument backgroundInstrument;
-    public Instrument secondaryBackgroundInstrument;
+    //public Instrument backgroundInstrument;
+    //public Instrument secondaryBackgroundInstrument;
 
     // Used to access the list of currently equipped abilities and find instrument-song pairs when a song changes
-    public EquippedAbilitiesControllerMM equippedAbilitiesController;
+    public EquippedAbilitiesController equippedAbilitiesController;
 
     // These are specifically for playtesting now - TO BE REMOVED ONCE WE DECIDE WHAT WE LIKE
     #region Playtesting Settings
@@ -143,7 +156,7 @@ public class MusicControllerDA : MonoBehaviour
 
     public bool simulatePrefabricatedPlay = false;  // Whether we want this to act like a Dynamic Alchemy System, or PP system
 
-    int numberOfAbilityCategories = 3;    // The number of categories used for the music calculations
+    int numberOfAbilityCategories;        // The number of categories used for the music calculations
 
     #endregion
 
@@ -175,6 +188,17 @@ public class MusicControllerDA : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        // We'll examine our Ability Category enum to find out how many categories we're working with
+        numberOfAbilityCategories = System.Enum.GetValues(typeof(GlobalSystemSettings.AbilityCategories)).Length;
+
+        // To start everything, we need to initialise and populate our array of category floats based on our global settings
+        CategoryLevels = new float[numberOfAbilityCategories];
+
+        for (int i = 0; i < CategoryLevels.Length; i++)
+        {
+            CategoryLevels[i] = minLevelValue;
+        }
+        
         // We don't want our music to stop when jumping across scenes - we'll smoothly transition it
         DontDestroyOnLoad(gameObject);
 
@@ -242,9 +266,19 @@ public class MusicControllerDA : MonoBehaviour
             
 
             // We want each of our categories to decay naturally over time
+            for (int i = 0; i < numberOfAbilityCategories; i++)
+            {
+                AdjustCategoryLevel(i, -currentDecayRate * Time.deltaTime);
+            }
+
+            /* LEGACY CODE
             AdjustMobilityLevel(-currentDecayRate * Time.deltaTime);
             AdjustOffenseLevel(-currentDecayRate * Time.deltaTime);
             AdjustDefenseLevel(-currentDecayRate * Time.deltaTime);
+            
+            END LEGACY CODE
+            */
+
         }
 
 
@@ -311,7 +345,7 @@ public class MusicControllerDA : MonoBehaviour
         // After initialising a song, we also want to cache any background tracks that should always be playing 
         // =============================================================================================================================
         // We'll start by checking if any backing track is already playing
-        if (BackgroundInstrumentIndex != -1)                                       // implies background instrument exists
+        /*if (BackgroundInstrumentIndex != -1)                                       // implies background instrument exists
         {
             // if one is playing, we'll fade it out nicely
             FadeOut(musicSources[(int)MusicSourceIndex.Background], standardMusicFadeSpeed);
@@ -322,8 +356,24 @@ public class MusicControllerDA : MonoBehaviour
         {
             // if one is playing, we'll fade it out nicely
             FadeOut(musicSources[(int)MusicSourceIndex.BackTemp], standardMusicFadeSpeed);
+        }*/
+
+        // We'll start by checking if any backing track is already playing
+        // We loop through all the background instrument indeces, starting at the index directly after all the category indeces
+        for (int i = 0; i < backgroundInstrumentIndeces.Length; i++)
+        {
+            if (backgroundInstrumentIndeces[i] != -1)
+            {
+                // if one is playing (index is withhin array bounds), we'll fade it out nicely
+                FadeOut(backgroundMusicSources[i], standardMusicFadeSpeed);                                               
+            }
         }
 
+
+        #region Single Background Clip Code
+        // In the optimum game, there should only be one background clip (eases the strain on the machine and gives us more audio
+        // sources for other things). As such, I've left this initial code here for when we're ready for this.
+        /*
         // We can then reinitialise this index variable before searching for a new relevent index
         // That way, if this is still -1 at the end of the loop, we know a backing instrument wasn't found
         BackgroundInstrumentIndex = -1;
@@ -338,24 +388,40 @@ public class MusicControllerDA : MonoBehaviour
             }
         }
         // This new index's clip will be automatically played when loading our first song section
+        */
 
-        #region Temporary secondary Background control
-        // NOTE - this section will either be deleted or revised to a more dynamic state in the next iteration
+        #endregion
 
-        // We can then reinitialise this index variable before searching for a new relevent index
-        // That way, if this is still -1 at the end of the loop, we know a backing instrument wasn't found
-        SecBackgroundInstrumentIndex = -1;
 
-        // The loop through the instruments looking for a secondaryBackground Instrument
-        for (int i = 0; i < newSong.songInstruments.Count; i++)
+        #region Several Background Clips code
+        // This region exists to let us test which instruments Rodwin creates work well as background clips
+
+        // First, we redefine our background Intrument index array so it's the correct size for the current song
+        backgroundInstrumentIndeces = new int[newSong.backgroundInstruments.Length];
+
+        // We can then reinitialise the indeces array before searching for new relevent indeces
+        // That way, if any are still -1 at the end of the loop, we know a backing instrument wasn't found for them
+        for (int i = 0; i < backgroundInstrumentIndeces.Length; i++)       // loops through background instrument indeces
         {
-            if (newSong.songInstruments[i] == secondaryBackgroundInstrument)
+            backgroundInstrumentIndeces[i] = -1;
+        }
+
+        
+        // We'll search for each individual background instrument of a song...
+        for (int i = 0; i < newSong.backgroundInstruments.Length; i++)
+        {
+            // ...in it's 2D sorted array
+            for (int j = 0; j < currentSong.sortedNodes.GetLength(0); j++)
             {
-                SecBackgroundInstrumentIndex = i;
-                break;
+                // and if we find a match, we'll store the index it was found at so we can reference that instrument row later
+                if (currentSong.sortedNodes[j, currentSongSection].nodeInstrument == newSong.backgroundInstruments[i])
+                {
+                    backgroundInstrumentIndeces[i] = j;
+                    break;
+                }
             }
         }
-        // This new index's clip will be automatically played when loading our first song section
+
         #endregion
 
         // End Background Instrument Initialisation ====================================================================================
@@ -394,6 +460,35 @@ public class MusicControllerDA : MonoBehaviour
         // We'll Start by updating which clips are playing based on the current energy levels
         // ================================================================================================================================
 
+        // We'll loop through all of our categories and update each of their Clips
+        for (int i = 0; i < numberOfAbilityCategories; i++)
+        {
+
+            if (dynamicInstrumentIndeces[i] != -1)    // We want to make sure an instrument is actually equipped for this category
+            {
+                dynamicMusicSources[i].clip =
+                GetCorrectEnergyClip(currentSong.sortedNodes[dynamicInstrumentIndeces[i], currentSongSection], CategoryLevels[i],
+                dynamicMusicSources[i].clip);
+
+                // If the clip was reassigned, the source will stop playing. In this case, we set the correct time and tell it to continue playing
+                // But we only want to do that if there is actually a clip present in that audio source (some instruments may not have clips for certain sections)
+                if (!dynamicMusicSources[i].isPlaying && dynamicMusicSources[i].clip != null)
+                {
+                    dynamicMusicSources[i].Play();          // We'll start the new clip
+
+                    // ...make sure the currentSectionTimer is still within the length of our clip
+                    if (currentSectionTimer <= dynamicMusicSources[i].clip.length)
+                    {
+                        // ...and if it is, we make sure the clip plays from the right timestamp
+                        dynamicMusicSources[i].time = currentSectionTimer;
+                    }
+                }
+            }
+        }
+
+
+        #region Legacy Clip Updating
+        /* LEGACY CODE
         // Update Mobility Clip
         if (MobilityInstrumentIndex != -1)    // We want to make sure an instrument is actually equipped for this category
         {
@@ -460,21 +555,50 @@ public class MusicControllerDA : MonoBehaviour
                 }
             }
         }
+        */
+        #endregion 
+
         // End clip assignment ============================================================================================================
 
 
 
         // Update the current volume values ===============================================================================================
 
-        // Update our volume variables based on their current category levels
+        // Update our category volume array based on the current category levels
+        for (int i = 0; i < numberOfAbilityCategories; i++)
+        {
+            categoryVolumes[i] = GetMusicSourceVolume(CategoryLevels[i]);
+        }
+
+        /* LEGACY CODE
         mobilityVolume = GetMusicSourceVolume(MobilityLevel);
         offenseVolume = GetMusicSourceVolume(OffenseLevel);
         defenseVolume = GetMusicSourceVolume(DefenseLevel);
+        
+        END LEGACY
+        */
 
         // Update our background volume levels based on the current overall playstyle energy
         backgroundVolume = GetBackgroundMusicSourceVolume(playstyleEnergy);
 
+
         // Then lerp towards these volume levels in our actual volume settings for our audio sources
+        // Lerping Dynamic Category based volumes
+        for (int i = 0; i < numberOfAbilityCategories; i++)
+        {
+            dynamicMusicSources[i].volume =
+            Mathf.Lerp(dynamicMusicSources[i].volume, categoryVolumes[i], standardVolumeMorphSpeed * Time.deltaTime);
+        }
+
+        // Lerping Background music source volumes
+        for (int i = 0; i < backgroundMusicSources.Length; i++)
+        {
+            backgroundMusicSources[i].volume =
+                Mathf.Lerp(backgroundMusicSources[i].volume, backgroundVolume, standardVolumeMorphSpeed * Time.deltaTime);
+        }
+
+
+        /* LEGACY CODE
         musicSources[(int)MusicSourceIndex.Mobility].volume =
             Mathf.Lerp(musicSources[(int)MusicSourceIndex.Mobility].volume, mobilityVolume, standardVolumeMorphSpeed * Time.deltaTime);
         musicSources[(int)MusicSourceIndex.Offense].volume =
@@ -486,6 +610,10 @@ public class MusicControllerDA : MonoBehaviour
             Mathf.Lerp(musicSources[(int)MusicSourceIndex.Background].volume, backgroundVolume, standardVolumeMorphSpeed * Time.deltaTime);
         musicSources[(int)MusicSourceIndex.BackTemp].volume =
             Mathf.Lerp(musicSources[(int)MusicSourceIndex.BackTemp].volume, backgroundVolume, standardVolumeMorphSpeed * Time.deltaTime);
+        
+        END LEGACY
+        */ 
+
 
         // End volume assignment ==========================================================================================================
     }
@@ -611,14 +739,25 @@ public class MusicControllerDA : MonoBehaviour
     /// </summary>
     void FadeOutCurrentSong()
     {
-        // We'll look through all the audio sources used to play music
-        for (int i = 0; i < musicSources.Length; i++)
+        // We'll look through all the audio sources used to play dynamic music
+        for (int i = 0; i < dynamicMusicSources.Length; i++)
         {
             // ...and if we find one that is currently playing something...
-            if (musicSources[i].isPlaying)
+            if (dynamicMusicSources[i].isPlaying)
             {
                 // ...we tell it to fade out what it's playing
-                FadeOut(musicSources[i], standardMusicFadeSpeed);
+                FadeOut(dynamicMusicSources[i], standardMusicFadeSpeed);
+            }
+        }
+
+        // We'll also look through all the audio sources used to play background music
+        for (int i = 0; i < backgroundMusicSources.Length; i++)
+        {
+            // ...and if we find one that is currently playing something...
+            if (backgroundMusicSources[i].isPlaying)
+            {
+                // ...we tell it to fade out what it's playing
+                FadeOut(backgroundMusicSources[i], standardMusicFadeSpeed);
             }
         }
     }
@@ -733,9 +872,21 @@ public class MusicControllerDA : MonoBehaviour
     /// </summary>
     public void UpdatePlaystyleEnergy()
     {
-        playstyleEnergy = Mathf.Clamp(MobilityLevel, 0, categoryMax) +
+        /* LEGACY
+         * playstyleEnergy = Mathf.Clamp(MobilityLevel, 0, categoryMax) +
             Mathf.Clamp(OffenseLevel, 0, categoryMax) +
             Mathf.Clamp(DefenseLevel, 0, categoryMax);
+            */
+
+        // We'll reinitiallise playstyle energy...
+        playstyleEnergy = 0;
+
+        //... allowing us to cumulatively add it up again by looping through all of our category values
+        for (int i = 0; i < numberOfAbilityCategories; i++)
+        {
+            playstyleEnergy += Mathf.Clamp(CategoryLevels[i], 0, categoryMax);
+        }
+
 
         // Using this new energy, we'll update our dynamic music mixer's goal volume
         UpdateDynamicMusicVolume();
@@ -809,7 +960,52 @@ public class MusicControllerDA : MonoBehaviour
 
         // Next we update the clips in our audio sources to those of the new sections. We'll have to check the current energy levels too
         // =============================================================================================================
+        
+        // We loop through all our categories to update their clips
+        for (int i = 0; i < numberOfAbilityCategories; i++)
+        {
+            // We want to make sure an instrument is actually equipped for this category
+            if (dynamicInstrumentIndeces[i] != -1)    
+            {
+                dynamicMusicSources[i].clip =
+                        GetCorrectEnergyClip(currentSong.sortedNodes[dynamicInstrumentIndeces[i], currentSongSection],
+                        currentSong.sortedNodes[dynamicInstrumentIndeces[i], previousSection], CategoryLevels[i],
+                        dynamicMusicSources[i].clip);
 
+                // We need to check if a clip was actually found before we try and play it
+                if (dynamicMusicSources[i].clip != null)
+                {
+                    dynamicMusicSources[i].time = 0;     // We make sure the new clip starts from the beginning
+                    dynamicMusicSources[i].Play();
+                }
+            }
+        }
+
+
+        for (int i = 0;  i < backgroundInstrumentIndeces.Length; i++)
+        {
+            // First we'll make sure the background instrument exists in the 2D sorted array of the song
+            if (backgroundInstrumentIndeces[i] != -1)
+            {
+                backgroundMusicSources[i].clip =
+                        GetBackgroundEnergyClip(currentSong.sortedNodes[backgroundInstrumentIndeces[i], currentSongSection],
+                        currentSong.sortedNodes[backgroundInstrumentIndeces[i], previousSection], playstyleEnergy,
+                        backgroundMusicSources[i].clip);
+
+                // We ensure a clip was actually found
+                if (backgroundMusicSources[i].clip != null)
+                {
+                    // and then play it at the correct time
+                    backgroundMusicSources[i].time = 0;
+                    backgroundMusicSources[i].Play();
+                }
+            }
+        }
+
+
+        #region LEGACY CODE
+        /* LEGACY CODE
+        
         // Mobility clip updating
         if (MobilityInstrumentIndex != -1)    // We want to make sure an instrument is actually equipped for this category
         {
@@ -818,7 +1014,7 @@ public class MusicControllerDA : MonoBehaviour
                         currentSong.sortedNodes[MobilityInstrumentIndex, previousSection], MobilityLevel,
                         musicSources[(int)MusicSourceIndex.Mobility].clip);
 
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////          // We need to check if the function actually found a fitting clip before trying to play it
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////          // We need to check if the function actually found a fitting clip before trying to play it
             musicSources[(int)MusicSourceIndex.Mobility].time = 0;                            // We make sure the new clip starts from the beginning
             musicSources[(int)MusicSourceIndex.Mobility].Play();
         }
@@ -846,6 +1042,8 @@ public class MusicControllerDA : MonoBehaviour
             musicSources[(int)MusicSourceIndex.Defense].Play();
         }
 
+
+
         if (BackgroundInstrumentIndex != -1)
         {
             musicSources[(int)MusicSourceIndex.Background].clip =
@@ -867,6 +1065,9 @@ public class MusicControllerDA : MonoBehaviour
 
             musicSources[(int)MusicSourceIndex.BackTemp].Play();
         }
+
+        */
+        #endregion
 
         // =============================================================================================================
 
@@ -1051,7 +1252,7 @@ public class MusicControllerDA : MonoBehaviour
     /// while fading in the new ability's associated music.
     /// </summary>
     /// <param name="newAbility">Ability that was just equipped</param>
-    public void EquipInstrument(AbilityMM newAbility)
+    public void EquipInstrument(Ability newAbility)
     {
         Instrument newInstrument = null;
 
@@ -1084,9 +1285,47 @@ public class MusicControllerDA : MonoBehaviour
             Debug.LogWarning("Ability " + newAbility.name + " has no instrument assigned for the " + currentSong.name + " song." );
         }
 
-        
+
         // Next, we figure out which category this new instrument belongs to, update that category's audio sources and fade out the music that was
         // initially playing.
+
+        // NOTE: We can use the abilityCategory enum as an index as all our category-based arrays' lengths and contents are based on 
+        // the category enum in GlobalSystemSettings
+
+        // Create a temporary object that will gently fade this instrument away
+        FadeOut(dynamicMusicSources[(int)newAbility.abilityCategory], standardMusicFadeSpeed); 
+        
+        dynamicInstrumentIndeces[(int)newAbility.abilityCategory] = newInstrumentIndex;   // Updates the current instrument index for the relative category
+        dynamicMusicSources[(int)newAbility.abilityCategory].volume = 0;                  // This will give an automatic fade-in effect, 
+                                                                                          // due to how volume responds to category levels in Update()
+
+        if (dynamicInstrumentIndeces[(int)newAbility.abilityCategory] == -1)              // implies no instrument equipped/found
+        {
+            // So we stop and clear our audio source
+            dynamicMusicSources[(int)newAbility.abilityCategory].Stop();
+            dynamicMusicSources[(int)newAbility.abilityCategory].clip = null;
+        }
+        else                                                                              // Implies there IS a new clip to play
+        {
+            // Assign the new clip to the correct AudioSource
+            dynamicMusicSources[(int)newAbility.abilityCategory].clip =                   
+                GetCorrectEnergyClip(currentSong.sortedNodes[newInstrumentIndex, currentSongSection], 
+                CategoryLevels[(int)newAbility.abilityCategory],
+                dynamicMusicSources[(int)newAbility.abilityCategory].clip);
+
+            // Make sure a relevant clip was found
+            if (dynamicMusicSources[(int)newAbility.abilityCategory].clip != null)
+            {
+                // Make sure the clip's playing at the correct place
+                dynamicMusicSources[(int)newAbility.abilityCategory].time = currentSectionTimer;      
+                dynamicMusicSources[(int)newAbility.abilityCategory].Play();
+            }
+        }
+
+
+        #region Legacy Code
+        /*
+        LEGACY CODE
         switch (newAbility.abilityCategory)
         {
             case AbilityMM.AbilityCategory.Mobility:
@@ -1158,6 +1397,10 @@ public class MusicControllerDA : MonoBehaviour
 
                 break;
         }
+
+        END LEGACY CODE
+        */
+        #endregion
     }
 
 
@@ -1182,8 +1425,19 @@ public class MusicControllerDA : MonoBehaviour
     /// Takes in a given ability category, and resets any variables and Audio Sources relating to that category in the manager.
     /// </summary>
     /// <param name="category">The category of the ability to remove</param>
-    public void RemoveInstrument(AbilityMM.AbilityCategory category)
+    public void RemoveInstrument(GlobalSystemSettings.AbilityCategories category)
     {
+        // We'll use the category of ability is being removed as an index, and reset all the audio sources and variables related to it
+        // NOTE: we can do this because all music arrays related to categories are based on the GlobalSystemSettings.AbilityCategories enum
+
+        FadeOut(dynamicMusicSources[(int)category], standardMusicFadeSpeed);   // Creates a temporary object that will gently fade this instrument away
+        dynamicInstrumentIndeces[(int)category] = -1;                          // Updates the current mobility instrument index; -1 implies nothing is equipped
+        dynamicMusicSources[(int)category].Stop();                             // With nothing to play, we can stop the source to save some processing power.
+        dynamicMusicSources[(int)category].clip = null;
+
+
+        #region LEGACY CODE
+        /* LEGACY CODE
         // We'll check which category of ability is being removed, and reset all the audio sources and variables related to it
         switch (category)
         {
@@ -1214,6 +1468,10 @@ public class MusicControllerDA : MonoBehaviour
 
                 break;
         }
+
+        END LEGACY CODE
+        */
+        #endregion
     }
 
 
@@ -1227,6 +1485,8 @@ public class MusicControllerDA : MonoBehaviour
         decayDelayTimer = 0;
     }
 
+
+    
     /// <summary>
     /// Returns the current speed at which category levels are decaying.
     /// </summary>
@@ -1236,6 +1496,33 @@ public class MusicControllerDA : MonoBehaviour
         return currentDecayRate;
     }
 
+
+
+    /// <summary>
+    /// Adjusts the current level of the given category by the float given. 
+    /// Value will be clamped, and any necessary music transitions will be called.
+    /// </summary>
+    /// <param name="category">The category which needs a level adjustment</param>
+    /// <param name="adjustment">How much the given category's Level will change by</param>
+    public void AdjustCategoryLevel(GlobalSystemSettings.AbilityCategories category, float adjustment)
+    {
+        CategoryLevels[(int)category] = Mathf.Clamp(CategoryLevels[(int)category] + adjustment, minLevelValue, maxLevelValue);
+    }
+
+    /// <summary>
+    /// Adjusts the current level of the category at the given index in our CategoryLevels array by the float given. 
+    /// Value will be clamped, and any necessary music transitions will be called.
+    /// </summary>
+    /// <param name="categoryIndex">The index of the category which needs a level adjustment within the CategoryLevels array</param>
+    /// <param name="adjustment">How much the given category's Level will change by</param>
+    public void AdjustCategoryLevel(int categoryIndex, float adjustment)
+    {
+        CategoryLevels[categoryIndex] = Mathf.Clamp(CategoryLevels[categoryIndex] + adjustment, minLevelValue, maxLevelValue);
+    }
+
+
+    #region LEGACY CODE - Category Level Adjustment
+    /* LEGACY CODE
 
     /// <summary>
     /// Adjusts the current Mobility level by the float given. Value will be clamped, and any necessary music transitions will be called.
@@ -1267,6 +1554,25 @@ public class MusicControllerDA : MonoBehaviour
         DefenseLevel = Mathf.Clamp(DefenseLevel + adjustment, minLevelValue, maxLevelValue);
     }
 
+    END LEGACY CODE
+    */
+
+    #endregion
+
+
+    /// <summary>
+    /// Sets the current level of the given category to the float given. 
+    /// Value will be clamped, and any necessary music transitions will be called.
+    /// </summary>
+    /// <param name="category">The category which requires a level change</param>
+    /// <param name="newLevel">The new value for the given category's Level</param>
+    public void SetCategoryLevel(GlobalSystemSettings.AbilityCategories category, float newLevel)
+    {
+        CategoryLevels[(int)category] = Mathf.Clamp(newLevel, minLevelValue, maxLevelValue);
+    }
+
+    #region LEGACY CODE  - Category Level Setting
+    /* LEGACY CODE
 
     /// <summary>
     /// Sets the current Mobility level to the float given. Value will be clamped, and any necessary music transitions will be called.
@@ -1298,9 +1604,88 @@ public class MusicControllerDA : MonoBehaviour
         DefenseLevel = Mathf.Clamp(newLevel, minLevelValue, maxLevelValue);
     }
 
+    END LEGACY CODE
+    */
+
+    #endregion
+
+
+    #region Getters (Functions used to access private values)
 
     // The Level values are made private to ensure they are properly clamped everytime they get set to something new
-    #region Getters (Functions used to access private values)
+
+    /// <summary>
+    /// Returns current Level of a given category.
+    /// </summary>
+    /// <param name="category">The category being examined</param>
+    /// <returns>Current Level of category given</returns>
+    public float GetCategoryLevel(GlobalSystemSettings.AbilityCategories category)
+    {
+        return CategoryLevels[(int)category];
+    }
+
+
+
+
+    /// <summary>
+    /// Returns the current calculated volume for the background music clips. Note that this is not necessarily the actual volume of the audio source
+    /// playing the background music - this audio source's volume will be lerped toward the value this returns.
+    /// </summary>
+    /// <returns>The current calculated volume for background tracks.</returns>
+    public float GetBackgroundVolume()
+    {
+        return backgroundVolume;
+    }
+
+
+    /// <summary>
+    /// Returns sum of all energy levels, each with an individual max value of categoryMax
+    /// </summary>
+    /// <returns>Current sum of all category energies - each capped at CategoryMax</returns>
+    public float GetPlaystyleEnergy()
+    {
+        return playstyleEnergy;
+    }
+
+
+    /// <summary>
+    /// Returns the energy rating (0-5) of the currently playing section.
+    /// </summary>
+    /// <returns>Float representing energy level of the song section playing</returns>
+    public float GetCurrentSectionEnergy()
+    {
+        return currentSong.sectionDetails[currentSongSection].songSectionEnergy;
+    }
+
+
+    /// <summary>
+    /// Returns the current calculated volume for the given category. Note that this is not necessarily the actual volume of the 
+    /// audio source playing the category's music - this audio source's volume will be lerped toward the value this returns.
+    /// </summary>
+    /// <returns>The current calculated volume for the given category.</returns>
+    /// <param name="category">The category associated with the volume being examined.</param>
+    public float GetCategoryVolume(GlobalSystemSettings.AbilityCategories category)
+    {
+        return categoryVolumes[(int)category];
+    }
+
+    /// <summary>
+    /// Returns the current calculated volume for the category in our categoryVolume array at the given index. Note that this is 
+    /// not necessarily the actual volume of the audio source playing that category's music - this audio source's volume will be 
+    /// lerped toward the value this returns. </summary>
+    /// <returns>The current calculated volume for the category in our categoryVolume array at the given index.</returns>
+    /// <param name="categoryIndex">The index of the category associated with the volume being examined within 
+    /// our categoryVolume array.</param>
+    public float GetCategoryVolume(int categoryIndex)
+    {
+        return categoryVolumes[categoryIndex];
+    }
+
+    #endregion
+
+
+    #region LEGACY CODE - Getters (Functions used to access private values)
+    /* LEGACY CODE
 
     /// <summary>
     /// Returns current MobilityLevel of MusicManager.
@@ -1331,25 +1716,6 @@ public class MusicControllerDA : MonoBehaviour
 
 
     /// <summary>
-    /// Returns sum of all three energy levels, each with a max value of categoryMax
-    /// </summary>
-    /// <returns>Current sum of all 3 category energies - each capped at CategoryMax</returns>
-    public float GetPlaystyleEnergy()
-    {
-        return playstyleEnergy;
-    }
-
-    /// <summary>
-    /// Returns the energy rating (0-5) of the currently playing section.
-    /// </summary>
-    /// <returns>Float representing energy level of the song section playing</returns>
-    public float GetCurrentSectionEnergy()
-    {
-        return currentSong.sectionDetails[currentSongSection].songSectionEnergy;
-    }
-
-
-    /// <summary>
     /// Returns the current calculated volume for mobility. Note that this is not necessarily the actual volume of the audio source
     /// playing the mobility music - this audio source's volume will be lerped toward the value this returns.
     /// </summary>
@@ -1358,6 +1724,8 @@ public class MusicControllerDA : MonoBehaviour
     {
         return mobilityVolume;
     }
+
+
 
     /// <summary>
     /// Returns the current calculated volume for offense. Note that this is not necessarily the actual volume of the audio source
@@ -1379,16 +1747,10 @@ public class MusicControllerDA : MonoBehaviour
         return defenseVolume;
     }
 
-    /// <summary>
-    /// Returns the current calculated volume for the background music clips. Note that this is not necessarily the actual volume of the audio source
-    /// playing the background music - this audio source's volume will be lerped toward the value this returns.
-    /// </summary>
-    /// <returns>The current calculated volume for background tracks.</returns>
-    public float GetBackgroundVolume()
-    {
-        return backgroundVolume;
-    }
 
+    END LEGACY CODE
+    */
     #endregion
+
 
 }

@@ -6694,6 +6694,10 @@ PrefabInstance:
       propertyPath: m_Radius
       value: 0.55
       objectReference: {fileID: 0}
+    - target: {fileID: 796194254, guid: 97294e498edf16b4a8fd2e4d8b93a2c7, type: 3}
+      propertyPath: m_IsTrigger
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2993512420304630049, guid: 97294e498edf16b4a8fd2e4d8b93a2c7,
         type: 3}
       propertyPath: ability
@@ -14976,6 +14980,10 @@ PrefabInstance:
     - target: {fileID: 796194254, guid: 97294e498edf16b4a8fd2e4d8b93a2c7, type: 3}
       propertyPath: m_Radius
       value: 0.55
+      objectReference: {fileID: 0}
+    - target: {fileID: 796194254, guid: 97294e498edf16b4a8fd2e4d8b93a2c7, type: 3}
+      propertyPath: m_IsTrigger
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1702207919146392671, guid: 97294e498edf16b4a8fd2e4d8b93a2c7,
         type: 3}
@@ -28440,6 +28448,10 @@ PrefabInstance:
     - target: {fileID: 796194254, guid: 97294e498edf16b4a8fd2e4d8b93a2c7, type: 3}
       propertyPath: m_Radius
       value: 0.55
+      objectReference: {fileID: 0}
+    - target: {fileID: 796194254, guid: 97294e498edf16b4a8fd2e4d8b93a2c7, type: 3}
+      propertyPath: m_IsTrigger
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4824536876897616517, guid: 97294e498edf16b4a8fd2e4d8b93a2c7,
         type: 3}

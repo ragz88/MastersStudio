@@ -7,8 +7,8 @@ using UnityEngine;
 /// </summary>
 public class CategoryProperties : MonoBehaviour
 {
-    public Ability.AbilityCategory Category;     // The category that all the information below applies to.
-    
+    public GlobalSystemSettings.AbilityCategories Category;     // The category that all the information below applies to.
+
     [Header("Colours")]
     public Color textColour;   // This colour should be used for all text on menu pages relating to this category.
     public Color imageColour;  // This colour should be used for all ability display images on menu pages relating to this category.

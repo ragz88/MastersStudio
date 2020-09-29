@@ -7,6 +7,7 @@ using System.Linq;      // used for our array sort function in IniitialiseSlots(
 
 public class EquippedAbilitiesController : MonoBehaviour
 {
+    
     /// <summary>
     /// Correlates each plausibly equipped ability type to a specific integer for cross referencing 
     /// it, and it's core components, in various arrays.
@@ -30,9 +31,11 @@ public class EquippedAbilitiesController : MonoBehaviour
 
     public InventoryManager inventoryManager;
 
+    int numberOfEquipableSlots;                      // The number of slots a player can equip an ability into. One for each category
+
     public InventorySlot[] equippedAbilitySlots;     // stores references to each slot in the 'equiped abilities' panel.
 
-    Ability[] equippedAbilities = new Ability[8];
+    public Ability[] equippedAbilities = new Ability[8];
     
 
     /// <summary>
